@@ -5,79 +5,41 @@
  * ============================================
  *
  * API Endpoints:
- *   GET  /notes     — Fetch all uploaded notes
- *   POST /upload    — Upload a new note (file as base64 or URL)
- *   GET  /search?q= — Search notes by code, name, or department
- *
- * Notes are stored in-memory (array).
- * For production, replace with a database + cloud storage.
+ *   GET    /notes          — Fetch all notes
+ *   POST   /upload         — Upload a new note
+ *   GET    /search?q=      — Search notes
+ *   DELETE /notes/:id      — Delete a note (owner only)
  */
 
 const express = require('express');
 const cors = require('cors');
 
-// ─── Initialize Express App ───
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── Middleware ───
-// Increased limit to 10mb to handle base64-encoded PDF files (5MB PDF ≈ 6.7MB base64)
-app.use(express.json({ limit: '10mb' }));
-
-// Enable Cross-Origin Resource Sharing (CORS)
+// 70mb to handle base64-encoded PDFs up to 50MB
+app.use(express.json({ limit: '70mb' }));
 app.use(cors());
 
 // ─── In-Memory Storage ───
 let notes = [];
 
-// ─── API ENDPOINTS ───
-
-/**
- * GET /notes
- * Returns all uploaded notes sorted by newest first.
- */
+// ─── GET /notes ───
 app.get('/notes', (req, res) => {
     try {
-        const sortedNotes = [...notes].sort(
-            (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
-        );
-
-        res.status(200).json({
-            success: true,
-            count: sortedNotes.length,
-            notes: sortedNotes
-        });
+        const sorted = [...notes].sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+        res.status(200).json({ success: true, count: sorted.length, notes: sorted });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch notes'
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch notes' });
     }
 });
 
-/**
- * POST /upload
- * Accepts note data in the request body and saves it.
- * The pdfUrl field can contain either:
- *   - A regular URL (e.g. Google Drive link)
- *   - A base64 data URL (e.g. "data:application/pdf;base64,...")
- *
- * Expected body:
- * {
- *   courseCode: string,
- *   courseName: string,
- *   department: string,
- *   semester: string,
- *   facultyName: string,
- *   unitNumber: string,
- *   pdfUrl: string (URL or base64 data URL)
- * }
- */
+// ─── POST /upload ───
 app.post('/upload', (req, res) => {
     try {
-        const { courseCode, courseName, department, semester, facultyName, unitNumber, pdfUrl } = req.body;
+        const { courseCode, courseName, department, semester, facultyName, unitNumber, pdfUrl, uploaderId } = req.body;
 
-        // ─── Validation ───
+        // Validate all fields
         if (!courseCode || !courseName || !department || !semester || !facultyName || !unitNumber || !pdfUrl) {
             return res.status(400).json({
                 success: false,
@@ -85,124 +47,119 @@ app.post('/upload', (req, res) => {
             });
         }
 
-        const trimmedData = {
+        const trimmed = {
             courseCode: courseCode.trim(),
             courseName: courseName.trim(),
             department: department.trim(),
             semester: semester.trim(),
             facultyName: facultyName.trim(),
             unitNumber: unitNumber.trim(),
-            pdfUrl: pdfUrl.trim()
+            pdfUrl: pdfUrl.trim(),
+            uploaderId: (uploaderId || '').trim()
         };
 
-        const hasEmptyField = Object.values(trimmedData).some(val => val === '');
-        if (hasEmptyField) {
-            return res.status(400).json({
-                success: false,
-                message: 'Fields cannot be empty or whitespace only'
-            });
+        if (Object.values(trimmed).some(v => v === '')) {
+            return res.status(400).json({ success: false, message: 'Fields cannot be empty or whitespace only' });
         }
 
-        // If pdfUrl is not a data URL, validate it as a proper URL
-        if (!trimmedData.pdfUrl.startsWith('data:')) {
-            try {
-                new URL(trimmedData.pdfUrl);
-            } catch (_) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'pdfUrl must be a valid URL or a base64 data URL'
-                });
+        // Validate URL only if it's not a base64 data URL
+        if (!trimmed.pdfUrl.startsWith('data:')) {
+            try { new URL(trimmed.pdfUrl); } catch (_) {
+                return res.status(400).json({ success: false, message: 'pdfUrl must be a valid URL or a base64 data URL' });
             }
         }
 
-        // ─── Create Note Object ───
         const newNote = {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-            ...trimmedData,
+            ...trimmed,
             uploadedAt: new Date().toISOString()
         };
 
-        // ─── Save to Array ───
         notes.push(newNote);
 
-        res.status(201).json({
-            success: true,
-            message: 'Note uploaded successfully!',
-            note: newNote
-        });
+        res.status(201).json({ success: true, message: 'Note uploaded successfully!', note: newNote });
 
     } catch (error) {
         console.error('Upload error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during upload'
-        });
+        res.status(500).json({ success: false, message: 'Internal server error during upload' });
     }
 });
 
-/**
- * GET /search?q=searchTerm
- * Searches notes by course code, course name, or department.
- * Search is case-insensitive.
- */
+// ─── GET /search?q= ───
 app.get('/search', (req, res) => {
     try {
         const query = req.query.q;
-
         if (!query || query.trim() === '') {
-            return res.status(400).json({
-                success: false,
-                message: 'Search query parameter "q" is required'
-            });
+            return res.status(400).json({ success: false, message: 'Search query parameter "q" is required' });
         }
 
-        const searchTerm = query.trim().toLowerCase();
+        const term = query.trim().toLowerCase();
+        const results = notes.filter(n =>
+            n.courseCode.toLowerCase().includes(term) ||
+            n.courseName.toLowerCase().includes(term) ||
+            n.department.toLowerCase().includes(term)
+        ).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
 
-        const results = notes.filter(note => {
-            return (
-                note.courseCode.toLowerCase().includes(searchTerm) ||
-                note.courseName.toLowerCase().includes(searchTerm) ||
-                note.department.toLowerCase().includes(searchTerm)
-            );
-        });
+        res.status(200).json({ success: true, query: query.trim(), count: results.length, notes: results });
+    } catch (error) {
+        console.error('Search error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error during search' });
+    }
+});
 
-        results.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+// ─── DELETE /notes/:id ───
+// Only the uploader (matching uploaderId) can delete their own note
+app.delete('/notes/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const { uploaderId } = req.body;
+
+        // Find the note
+        const noteIndex = notes.findIndex(n => n.id === id);
+
+        // Note not found
+        if (noteIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Note not found' });
+        }
+
+        const note = notes[noteIndex];
+
+        // Check if uploaderId is provided
+        if (!uploaderId) {
+            return res.status(401).json({ success: false, message: 'Uploader ID is required to delete' });
+        }
+
+        // Check ownership — only the original uploader can delete
+        if (note.uploaderId !== uploaderId) {
+            return res.status(403).json({ success: false, message: 'You can only delete your own notes' });
+        }
+
+        // Remove the note
+        const deleted = notes.splice(noteIndex, 1)[0];
 
         res.status(200).json({
             success: true,
-            query: query.trim(),
-            count: results.length,
-            notes: results
+            message: 'Note deleted successfully',
+            deletedNote: deleted
         });
 
     } catch (error) {
-        console.error('Search error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during search'
-        });
+        console.error('Delete error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error during delete' });
     }
 });
 
 // ─── Health Check ───
 app.get('/', (req, res) => {
-    res.status(200).json({
-        service: 'NoteVault API',
-        version: '1.0.0',
-        status: 'running',
-        totalNotes: notes.length
-    });
+    res.status(200).json({ service: 'NoteVault API', version: '1.0.0', status: 'running', totalNotes: notes.length });
 });
 
 // ─── 404 Handler ───
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: `Route ${req.method} ${req.path} not found`
-    });
+    res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
 });
 
-// ─── Start the Server ───
+// ─── Start Server ───
 app.listen(PORT, () => {
     console.log(`
   ╔═══════════════════════════════════════╗
@@ -211,12 +168,13 @@ app.listen(PORT, () => {
   ║   Status:  Running                    ║
   ║   Port:    ${PORT}                        ║
   ║   URL:     http://localhost:${PORT}      ║
-  ║   JSON Limit: 10MB (for PDF uploads)  ║
+  ║   JSON Limit: 70MB (for PDF uploads)  ║
   ║                                       ║
   ║   Endpoints:                           ║
-  ║   GET  /notes     — Fetch all notes   ║
-  ║   POST /upload    — Upload a note     ║
-  ║   GET  /search?q= — Search notes      ║
+  ║   GET    /notes      — Fetch all      ║
+  ║   POST   /upload     — Upload note    ║
+  ║   GET    /search?q=  — Search notes   ║
+  ║   DELETE /notes/:id  — Delete note    ║
   ╚═══════════════════════════════════════╝
     `);
 });
