@@ -24,6 +24,9 @@
     <!-- Particle Canvas Background -->
     <canvas id="particleCanvas"></canvas>
 
+    <!-- Confetti Container -->
+    <div id="confettiContainer"></div>
+
     <!-- Toast Container -->
     <div id="toastContainer"></div>
 
@@ -78,32 +81,46 @@
     <section id="hero">
         <div class="hero-bg-glow hero-glow-1"></div>
         <div class="hero-bg-glow hero-glow-2"></div>
+        <div class="hero-bg-glow hero-glow-3"></div>
+
+        <!-- Floating Geometric Shapes -->
+        <div class="floating-shapes" id="floatingShapes">
+            <div class="floating-shape shape-ring shape-1"></div>
+            <div class="floating-shape shape-diamond shape-2"></div>
+            <div class="floating-shape shape-dot shape-3"></div>
+            <div class="floating-shape shape-ring shape-4"></div>
+            <div class="floating-shape shape-diamond shape-5"></div>
+            <div class="floating-shape shape-dot shape-6"></div>
+            <div class="floating-shape shape-cross shape-7"></div>
+            <div class="floating-shape shape-cross shape-8"></div>
+        </div>
+
         <div class="hero-container">
-            <div class="hero-badge" data-aos="fade-down" data-aos-delay="200">
+            <div class="hero-badge" id="heroBadge" style="opacity:0;">
                 <i class="fas fa-sparkles"></i>
                 <span>Open Source Notes Platform</span>
             </div>
-            <h1 class="hero-title" data-aos="fade-up" data-aos-delay="400">
+            <h1 class="hero-title" id="heroTitle" style="opacity:0;">
                 <span class="hero-title-line">Your College Notes,</span>
                 <span class="hero-title-line hero-typed-wrapper">
                     <span id="typedText"></span><span class="typed-cursor">|</span>
                 </span>
             </h1>
-            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="600">
+            <p class="hero-subtitle" id="heroSubtitle" style="opacity:0;">
                 Upload, search, and share study notes with your peers.
                 No boundaries, no predefined subjects — share anything you're studying.
             </p>
-            <div class="hero-actions" data-aos="fade-up" data-aos-delay="800">
-                <a href="#upload" class="btn btn-primary btn-ripple">
+            <div class="hero-actions" id="heroActions" style="opacity:0;">
+                <a href="#upload" class="btn btn-primary btn-ripple btn-magnetic">
                     <i class="fas fa-cloud-arrow-up"></i>
                     Upload Notes
                 </a>
-                <a href="#notes" class="btn btn-secondary btn-ripple">
+                <a href="#notes" class="btn btn-secondary btn-ripple btn-magnetic">
                     <i class="fas fa-magnifying-glass"></i>
                     Browse Notes
                 </a>
             </div>
-            <div class="hero-stats-mini" data-aos="fade-up" data-aos-delay="1000">
+            <div class="hero-stats-mini" id="heroStats" style="opacity:0;">
                 <div class="hero-stat-mini">
                     <span class="hero-stat-number" id="heroStatNotes">0</span>
                     <span class="hero-stat-label">Notes Shared</span>
@@ -120,7 +137,7 @@
                 </div>
             </div>
         </div>
-        <div class="hero-scroll-indicator" data-aos="fade-up" data-aos-delay="1200">
+        <div class="hero-scroll-indicator" id="heroScroll" style="opacity:0;">
             <div class="scroll-mouse">
                 <div class="scroll-wheel"></div>
             </div>
@@ -191,12 +208,68 @@
                             </div>
                         </div>
 
+                        <!-- PDF Upload Mode Toggle -->
                         <div class="form-row form-row-full">
                             <div class="form-group">
-                                <label for="pdfUrl">
-                                    <i class="fas fa-file-pdf"></i> PDF URL
+                                <label>
+                                    <i class="fas fa-file-pdf"></i> PDF File
                                 </label>
-                                <input type="url" id="pdfUrl" name="pdfUrl" placeholder="https://drive.google.com/..." required autocomplete="off">
+                                <div class="upload-mode-toggle">
+                                    <button type="button" class="mode-btn active" data-mode="file" id="modeFileBtn">
+                                        <i class="fas fa-upload"></i> Upload File
+                                    </button>
+                                    <button type="button" class="mode-btn" data-mode="url" id="modeUrlBtn">
+                                        <i class="fas fa-link"></i> Paste URL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Zone -->
+                        <div class="form-row form-row-full" id="fileZoneRow">
+                            <div class="form-group">
+                                <div class="file-drop-zone" id="fileDropZone">
+                                    <div class="file-zone-inner">
+                                        <div class="file-zone-icon">
+                                            <i class="fas fa-cloud-arrow-up"></i>
+                                        </div>
+                                        <p class="file-zone-title">Drag & drop your PDF here</p>
+                                        <p class="file-zone-subtitle">or <span class="file-zone-browse">browse files</span></p>
+                                        <div class="file-zone-badges">
+                                            <span class="file-zone-badge"><i class="fas fa-file-pdf"></i> PDF only</span>
+                                            <span class="file-zone-badge"><i class="fas fa-weight-hanging"></i> Max 5MB</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
+                                </div>
+
+                                <!-- File Preview (shown after selection) -->
+                                <div class="file-preview" id="filePreview">
+                                    <div class="file-preview-icon-wrap">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <span class="file-preview-name" id="fileName"></span>
+                                        <span class="file-preview-size" id="fileSize"></span>
+                                    </div>
+                                    <div class="file-preview-check">
+                                        <i class="fas fa-circle-check"></i>
+                                    </div>
+                                    <button type="button" class="file-remove-btn" id="fileRemove" aria-label="Remove file">
+                                        <i class="fas fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <span class="form-error" id="fileError"></span>
+                            </div>
+                        </div>
+
+                        <!-- URL Input Zone (hidden by default) -->
+                        <div class="form-row form-row-full" id="urlZoneRow" style="display:none;">
+                            <div class="form-group">
+                                <label for="pdfUrl">
+                                    <i class="fas fa-link"></i> PDF URL
+                                </label>
+                                <input type="url" id="pdfUrl" name="pdfUrl" placeholder="https://drive.google.com/..." autocomplete="off">
                                 <span class="form-hint">Paste a link to your PDF (Google Drive, OneDrive, etc.)</span>
                                 <span class="form-error" id="pdfUrlError"></span>
                             </div>
@@ -280,7 +353,7 @@
                 <p class="section-subtitle">Real-time stats powered by community contributions.</p>
             </div>
 
-            <div class="stats-grid" data-aos="fade-up" data-aos-delay="200">
+            <div class="stats-grid" id="statsGrid" data-aos="fade-up" data-aos-delay="200">
                 <div class="stat-card">
                     <div class="stat-icon-wrap stat-icon-blue">
                         <i class="fas fa-file-lines"></i>
