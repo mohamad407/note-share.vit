@@ -6,11 +6,11 @@
  *
  * API Endpoints:
  *   GET  /notes     — Fetch all uploaded notes
- *   POST /upload    — Upload a new note
+ *   POST /upload    — Upload a new note (file as base64 or URL)
  *   GET  /search?q= — Search notes by code, name, or department
  *
  * Notes are stored in-memory (array).
- * For production, replace with a database.
+ * For production, replace with a database + cloud storage.
  */
 
 const express = require('express');
@@ -21,17 +21,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Middleware ───
-// Parse incoming JSON request bodies
-app.use(express.json());
+// Increased limit to 10mb to handle base64-encoded PDF files (5MB PDF ≈ 6.7MB base64)
+app.use(express.json({ limit: '10mb' }));
 
 // Enable Cross-Origin Resource Sharing (CORS)
-// This allows the frontend (deployed on Vercel) to call this API
 app.use(cors());
 
 // ─── In-Memory Storage ───
-// All uploaded notes are stored in this array.
-// Data resets when the server restarts.
-// Replace with a database (MongoDB, PostgreSQL, etc.) for production.
 let notes = [];
 
 // ─── API ENDPOINTS ───
@@ -42,7 +38,6 @@ let notes = [];
  */
 app.get('/notes', (req, res) => {
     try {
-        // Return notes sorted by upload time (newest first)
         const sortedNotes = [...notes].sort(
             (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
         );
@@ -63,6 +58,9 @@ app.get('/notes', (req, res) => {
 /**
  * POST /upload
  * Accepts note data in the request body and saves it.
+ * The pdfUrl field can contain either:
+ *   - A regular URL (e.g. Google Drive link)
+ *   - A base64 data URL (e.g. "data:application/pdf;base64,...")
  *
  * Expected body:
  * {
@@ -72,7 +70,7 @@ app.get('/notes', (req, res) => {
  *   semester: string,
  *   facultyName: string,
  *   unitNumber: string,
- *   pdfUrl: string
+ *   pdfUrl: string (URL or base64 data URL)
  * }
  */
 app.post('/upload', (req, res) => {
@@ -80,7 +78,6 @@ app.post('/upload', (req, res) => {
         const { courseCode, courseName, department, semester, facultyName, unitNumber, pdfUrl } = req.body;
 
         // ─── Validation ───
-        // Check that all required fields are provided
         if (!courseCode || !courseName || !department || !semester || !facultyName || !unitNumber || !pdfUrl) {
             return res.status(400).json({
                 success: false,
@@ -88,7 +85,6 @@ app.post('/upload', (req, res) => {
             });
         }
 
-        // Trim whitespace from all fields
         const trimmedData = {
             courseCode: courseCode.trim(),
             courseName: courseName.trim(),
@@ -99,13 +95,24 @@ app.post('/upload', (req, res) => {
             pdfUrl: pdfUrl.trim()
         };
 
-        // Check for empty strings after trimming
         const hasEmptyField = Object.values(trimmedData).some(val => val === '');
         if (hasEmptyField) {
             return res.status(400).json({
                 success: false,
                 message: 'Fields cannot be empty or whitespace only'
             });
+        }
+
+        // If pdfUrl is not a data URL, validate it as a proper URL
+        if (!trimmedData.pdfUrl.startsWith('data:')) {
+            try {
+                new URL(trimmedData.pdfUrl);
+            } catch (_) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'pdfUrl must be a valid URL or a base64 data URL'
+                });
+            }
         }
 
         // ─── Create Note Object ───
@@ -118,7 +125,6 @@ app.post('/upload', (req, res) => {
         // ─── Save to Array ───
         notes.push(newNote);
 
-        // ─── Success Response ───
         res.status(201).json({
             success: true,
             message: 'Note uploaded successfully!',
@@ -138,15 +144,11 @@ app.post('/upload', (req, res) => {
  * GET /search?q=searchTerm
  * Searches notes by course code, course name, or department.
  * Search is case-insensitive.
- *
- * Query parameter:
- *   q — The search term (required)
  */
 app.get('/search', (req, res) => {
     try {
         const query = req.query.q;
 
-        // Check if search query is provided
         if (!query || query.trim() === '') {
             return res.status(400).json({
                 success: false,
@@ -154,10 +156,8 @@ app.get('/search', (req, res) => {
             });
         }
 
-        // Convert query to lowercase for case-insensitive matching
         const searchTerm = query.trim().toLowerCase();
 
-        // Filter notes: match courseCode, courseName, or department
         const results = notes.filter(note => {
             return (
                 note.courseCode.toLowerCase().includes(searchTerm) ||
@@ -166,7 +166,6 @@ app.get('/search', (req, res) => {
             );
         });
 
-        // Sort results by newest first
         results.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
 
         res.status(200).json({
@@ -185,7 +184,7 @@ app.get('/search', (req, res) => {
     }
 });
 
-// ─── Health Check Endpoint (useful for monitoring) ───
+// ─── Health Check ───
 app.get('/', (req, res) => {
     res.status(200).json({
         service: 'NoteVault API',
@@ -195,7 +194,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// ─── 404 Handler — for any unmatched routes ───
+// ─── 404 Handler ───
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -212,6 +211,7 @@ app.listen(PORT, () => {
   ║   Status:  Running                    ║
   ║   Port:    ${PORT}                        ║
   ║   URL:     http://localhost:${PORT}      ║
+  ║   JSON Limit: 10MB (for PDF uploads)  ║
   ║                                       ║
   ║   Endpoints:                           ║
   ║   GET  /notes     — Fetch all notes   ║
