@@ -1,30 +1,43 @@
 /* ============================================
    NOTEVAULT — Frontend JavaScript
-   Handles: Particles, Animations, API calls,
-   Search, Rendering, Interactions
+   Handles: Particles, Animations, File Upload,
+   API calls, Search, Rendering, Interactions
    ============================================ */
 
 // ─── Backend URL ───
 // Replace with your deployed Render URL
-const API_BASE =  "https://note-share-vit.onrender.com";
+const API_BASE = "https://note-share-vit.onrender.com";
 
 // ─── State ───
 let allNotes = [];
 let searchTimeout = null;
+let selectedFile = null;       // Holds the selected File object
+let selectedFileData = null;   // Holds the base64 data URL string
+let uploadMode = 'file';       // 'file' or 'url'
+
+// ─── Constants ───
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const ALLOWED_TYPE = 'application/pdf';
 
 // ─── Initialize on DOM Ready ───
 document.addEventListener('DOMContentLoaded', () => {
     initParticles();
+    initHeroEntrance();
     initTypingAnimation();
     initNavbar();
     initMobileNav();
     initRippleEffects();
+    initMagneticButtons();
+    initUploadModeToggle();
+    initFileUpload();
     initForm();
     initSearch();
     initScrollReveal();
+    initCardGlowDelegate();
     fetchAndRenderNotes();
     initSmoothScroll();
     init3DCardTilt();
+    initStatsScrollAnimation();
 });
 
 /* ===========================================
@@ -34,8 +47,9 @@ function initParticles() {
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const PARTICLE_COUNT = 60;
+    const PARTICLE_COUNT = 65;
     const CONNECTION_DIST = 140;
+    let mouse = { x: -1000, y: -1000 };
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -44,7 +58,12 @@ function initParticles() {
     resize();
     window.addEventListener('resize', resize);
 
-    // Create particles
+    // Track mouse for interactive particles
+    document.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
     for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
             x: Math.random() * canvas.width,
@@ -52,40 +71,51 @@ function initParticles() {
             vx: (Math.random() - 0.5) * 0.4,
             vy: (Math.random() - 0.5) * 0.4,
             radius: Math.random() * 1.5 + 0.5,
-            opacity: Math.random() * 0.4 + 0.1
+            opacity: Math.random() * 0.4 + 0.1,
+            baseOpacity: Math.random() * 0.4 + 0.1
         });
     }
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Update and draw particles
         for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             p.x += p.vx;
             p.y += p.vy;
 
-            // Wrap around edges
             if (p.x < 0) p.x = canvas.width;
             if (p.x > canvas.width) p.x = 0;
             if (p.y < 0) p.y = canvas.height;
             if (p.y > canvas.height) p.y = 0;
 
-            // Draw particle
+            // Mouse interaction — particles glow near cursor
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 180) {
+                const force = (180 - dist) / 180;
+                p.opacity = p.baseOpacity + force * 0.5;
+                // Gentle repulsion
+                p.x += (dx / dist) * force * 0.3;
+                p.y += (dy / dist) * force * 0.3;
+            } else {
+                p.opacity += (p.baseOpacity - p.opacity) * 0.05;
+            }
+
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(0, 212, 255, ${p.opacity})`;
             ctx.fill();
 
-            // Draw connections
             for (let j = i + 1; j < particles.length; j++) {
                 const p2 = particles[j];
-                const dx = p.x - p2.x;
-                const dy = p.y - p2.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                const cdx = p.x - p2.x;
+                const cdy = p.y - p2.y;
+                const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
 
-                if (dist < CONNECTION_DIST) {
-                    const alpha = (1 - dist / CONNECTION_DIST) * 0.08;
+                if (cdist < CONNECTION_DIST) {
+                    const alpha = (1 - cdist / CONNECTION_DIST) * 0.08;
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(p2.x, p2.y);
@@ -102,6 +132,37 @@ function initParticles() {
 }
 
 /* ===========================================
+   HERO ENTRANCE ANIMATION (GSAP)
+   =========================================== */
+function initHeroEntrance() {
+    const tl = gsap.timeline({ delay: 0.3 });
+
+    tl.to('#heroBadge', {
+        opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+        startAt: { y: 20 }
+    })
+    .to('#heroTitle', {
+        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+        startAt: { y: 30 }
+    }, '-=0.4')
+    .to('#heroSubtitle', {
+        opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+        startAt: { y: 20 }
+    }, '-=0.4')
+    .to('#heroActions', {
+        opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+        startAt: { y: 20 }
+    }, '-=0.35')
+    .to('#heroStats', {
+        opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+        startAt: { y: 20 }
+    }, '-=0.3')
+    .to('#heroScroll', {
+        opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, '-=0.2');
+}
+
+/* ===========================================
    TYPING ANIMATION
    =========================================== */
 function initTypingAnimation() {
@@ -113,10 +174,7 @@ function initTypingAnimation() {
         'Free Forever.'
     ];
     const typedEl = document.getElementById('typedText');
-    let phraseIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let typeSpeed = 80;
+    let phraseIndex = 0, charIndex = 0, isDeleting = false, typeSpeed = 80;
 
     function type() {
         const currentPhrase = phrases[phraseIndex];
@@ -132,12 +190,12 @@ function initTypingAnimation() {
         }
 
         if (!isDeleting && charIndex === currentPhrase.length) {
-            typeSpeed = 2000; // Pause at end
+            typeSpeed = 2000;
             isDeleting = true;
         } else if (isDeleting && charIndex === 0) {
             isDeleting = false;
             phraseIndex = (phraseIndex + 1) % phrases.length;
-            typeSpeed = 400; // Pause before new word
+            typeSpeed = 400;
         }
 
         setTimeout(type, typeSpeed);
@@ -153,28 +211,18 @@ function initNavbar() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('section[id]');
 
-    // Scroll behavior
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 60) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
+        navbar.classList.toggle('scrolled', window.scrollY > 60);
 
-        // Active section highlighting
         let current = '';
         sections.forEach(section => {
-            const sectionTop = section.offsetTop - 120;
-            if (window.scrollY >= sectionTop) {
+            if (window.scrollY >= section.offsetTop - 120) {
                 current = section.getAttribute('id');
             }
         });
 
         navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${current}`) {
-                link.classList.add('active');
-            }
+            link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
         });
     });
 }
@@ -203,9 +251,10 @@ function initSmoothScroll() {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                const offset = 80;
-                const top = target.getBoundingClientRect().top + window.scrollY - offset;
-                window.scrollTo({ top, behavior: 'smooth' });
+                window.scrollTo({
+                    top: target.getBoundingClientRect().top + window.scrollY - 80,
+                    behavior: 'smooth'
+                });
             }
         });
     });
@@ -215,19 +264,195 @@ function initSmoothScroll() {
    RIPPLE EFFECTS
    =========================================== */
 function initRippleEffects() {
-    document.querySelectorAll('.btn-ripple').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-            this.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 600);
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-ripple');
+        if (!btn) return;
+
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        btn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    });
+}
+
+/* ===========================================
+   MAGNETIC BUTTON EFFECT
+   =========================================== */
+function initMagneticButtons() {
+    document.querySelectorAll('.btn-magnetic').forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'translate(0, 0)';
         });
     });
+}
+
+/* ===========================================
+   UPLOAD MODE TOGGLE (File vs URL)
+   =========================================== */
+function initUploadModeToggle() {
+    const fileBtn = document.getElementById('modeFileBtn');
+    const urlBtn = document.getElementById('modeUrlBtn');
+    const fileZoneRow = document.getElementById('fileZoneRow');
+    const urlZoneRow = document.getElementById('urlZoneRow');
+
+    fileBtn.addEventListener('click', () => {
+        uploadMode = 'file';
+        fileBtn.classList.add('active');
+        urlBtn.classList.remove('active');
+        fileZoneRow.style.display = '';
+        urlZoneRow.style.display = 'none';
+    });
+
+    urlBtn.addEventListener('click', () => {
+        uploadMode = 'url';
+        urlBtn.classList.add('active');
+        fileBtn.classList.remove('active');
+        urlZoneRow.style.display = '';
+        fileZoneRow.style.display = 'none';
+        // Clear file selection when switching to URL mode
+        clearFileSelection();
+    });
+}
+
+/* ===========================================
+   FILE UPLOAD (Drag & Drop + Click)
+   =========================================== */
+function initFileUpload() {
+    const dropZone = document.getElementById('fileDropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileRemove = document.getElementById('fileRemove');
+    const fileError = document.getElementById('fileError');
+
+    // Click to browse
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    // Drag events
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        // Only remove if we actually left the zone
+        if (!dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove('drag-over');
+        }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        fileError.textContent = '';
+
+        if (e.dataTransfer.files.length > 0) {
+            handleFileSelection(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Glow follow mouse on drop zone
+    dropZone.addEventListener('mousemove', (e) => {
+        const rect = dropZone.getBoundingClientRect();
+        dropZone.style.setProperty('--glow-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        dropZone.style.setProperty('--glow-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+
+    // Remove file
+    fileRemove.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearFileSelection();
+    });
+}
+
+function handleFileSelection(file) {
+    const dropZone = document.getElementById('fileDropZone');
+    const filePreview = document.getElementById('filePreview');
+    const fileError = document.getElementById('fileError');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    // Clear previous error
+    fileError.textContent = '';
+    dropZone.classList.remove('zone-error');
+
+    // Validate file type
+    if (file.type !== ALLOWED_TYPE && !file.name.toLowerCase().endsWith('.pdf')) {
+        fileError.textContent = 'Only PDF files are allowed. Please select a valid PDF.';
+        dropZone.classList.add('zone-error');
+        setTimeout(() => dropZone.classList.remove('zone-error'), 500);
+        return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        fileError.textContent = `File is ${sizeMB}MB. Maximum allowed size is 5MB.`;
+        dropZone.classList.add('zone-error');
+        setTimeout(() => dropZone.classList.remove('zone-error'), 500);
+        return;
+    }
+
+    // Valid file — show preview
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+
+    // Read as base64 data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        selectedFileData = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Show preview, hide drop zone
+    dropZone.classList.add('has-file');
+    filePreview.classList.add('visible');
+}
+
+function clearFileSelection() {
+    selectedFile = null;
+    selectedFileData = null;
+
+    const dropZone = document.getElementById('fileDropZone');
+    const filePreview = document.getElementById('filePreview');
+    const fileInput = document.getElementById('fileInput');
+    const fileError = document.getElementById('fileError');
+
+    dropZone.classList.remove('has-file', 'zone-error');
+    filePreview.classList.remove('visible');
+    fileInput.value = '';
+    fileError.textContent = '';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
 /* ===========================================
@@ -238,11 +463,7 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
-    const icons = {
-        success: 'fa-check',
-        error: 'fa-xmark',
-        info: 'fa-info'
-    };
+    const icons = { success: 'fa-check', error: 'fa-xmark', info: 'fa-info' };
 
     toast.innerHTML = `
         <div class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
@@ -251,19 +472,48 @@ function showToast(message, type = 'success') {
 
     container.appendChild(toast);
 
-    // Trigger show animation
     requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-        });
+        requestAnimationFrame(() => toast.classList.add('show'));
     });
 
-    // Auto dismiss after 4s
     setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('hide');
         setTimeout(() => toast.remove(), 400);
     }, 4000);
+}
+
+/* ===========================================
+   CONFETTI EFFECT
+   =========================================== */
+function launchConfetti() {
+    const container = document.getElementById('confettiContainer');
+    const colors = ['#00d4ff', '#7b2ff7', '#00ff88', '#ff8c42', '#ff4d6d', '#ffdd57'];
+    const count = 50;
+
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.classList.add('confetti-piece');
+        piece.style.left = (40 + Math.random() * 20) + '%';
+        piece.style.top = (30 + Math.random() * 10) + '%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.width = (4 + Math.random() * 8) + 'px';
+        piece.style.height = (4 + Math.random() * 8) + 'px';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        piece.style.animationDuration = (1.2 + Math.random() * 1) + 's';
+        piece.style.animationDelay = (Math.random() * 0.3) + 's';
+
+        // Random horizontal spread
+        const xOffset = (Math.random() - 0.5) * 400;
+        piece.style.setProperty('--x-drift', xOffset + 'px');
+
+        // Override animation with custom keyframes via inline style
+        piece.style.animation = `confettiFall ${1.2 + Math.random() * 1}s ease-out ${Math.random() * 0.3}s forwards`;
+        piece.style.transform = `translateX(${xOffset}px)`;
+
+        container.appendChild(piece);
+        setTimeout(() => piece.remove(), 2500);
+    }
 }
 
 /* ===========================================
@@ -274,25 +524,31 @@ function initForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        // Clear previous errors
         clearFormErrors();
 
-        // Get values
         const data = {
             courseCode: document.getElementById('courseCode').value.trim(),
             courseName: document.getElementById('courseName').value.trim(),
             department: document.getElementById('department').value.trim(),
             semester: document.getElementById('semester').value.trim(),
             facultyName: document.getElementById('facultyName').value.trim(),
-            unitNumber: document.getElementById('unitNumber').value.trim(),
-            pdfUrl: document.getElementById('pdfUrl').value.trim()
+            unitNumber: document.getElementById('unitNumber').value.trim()
         };
 
-        // Validate
+        // Handle PDF based on mode
+        if (uploadMode === 'file') {
+            if (!selectedFile || !selectedFileData) {
+                document.getElementById('fileError').textContent = 'Please select a PDF file to upload.';
+                return;
+            }
+            data.pdfUrl = selectedFileData;
+        } else {
+            data.pdfUrl = document.getElementById('pdfUrl').value.trim();
+        }
+
         if (!validateForm(data)) return;
 
-        // Show loading state
+        // Show loading
         const submitBtn = document.getElementById('submitBtn');
         const btnText = submitBtn.querySelector('.btn-text');
         const btnLoading = submitBtn.querySelector('.btn-loading');
@@ -311,7 +567,9 @@ function initForm() {
 
             if (response.ok) {
                 showToast('Notes uploaded successfully!', 'success');
+                launchConfetti();
                 form.reset();
+                clearFileSelection();
                 fetchAndRenderNotes();
             } else {
                 showToast(result.message || 'Upload failed. Try again.', 'error');
@@ -335,39 +593,35 @@ function validateForm(data) {
         { key: 'department', label: 'Department is required' },
         { key: 'semester', label: 'Semester is required' },
         { key: 'facultyName', label: 'Faculty Name is required' },
-        { key: 'unitNumber', label: 'Unit Number is required' },
-        { key: 'pdfUrl', label: 'PDF URL is required' }
+        { key: 'unitNumber', label: 'Unit Number is required' }
     ];
 
     fields.forEach(field => {
         if (!data[field.key]) {
-            const input = document.getElementById(field.key);
-            const error = document.getElementById(field.key + 'Error');
-            input.classList.add('input-error');
-            error.textContent = field.label;
+            document.getElementById(field.key).classList.add('input-error');
+            document.getElementById(field.key + 'Error').textContent = field.label;
             isValid = false;
         }
     });
 
-    // Validate URL format
-    if (data.pdfUrl && !isValidUrl(data.pdfUrl)) {
-        const input = document.getElementById('pdfUrl');
-        const error = document.getElementById('pdfUrlError');
-        input.classList.add('input-error');
-        error.textContent = 'Please enter a valid URL';
-        isValid = false;
+    // Validate URL only in URL mode
+    if (uploadMode === 'url') {
+        if (!data.pdfUrl) {
+            document.getElementById('pdfUrl').classList.add('input-error');
+            document.getElementById('pdfUrlError').textContent = 'PDF URL is required';
+            isValid = false;
+        } else if (!isValidUrl(data.pdfUrl)) {
+            document.getElementById('pdfUrl').classList.add('input-error');
+            document.getElementById('pdfUrlError').textContent = 'Please enter a valid URL';
+            isValid = false;
+        }
     }
 
     return isValid;
 }
 
 function isValidUrl(string) {
-    try {
-        new URL(string);
-        return true;
-    } catch (_) {
-        return false;
-    }
+    try { new URL(string); return true; } catch (_) { return false; }
 }
 
 function clearFormErrors() {
@@ -387,16 +641,12 @@ function initSearch() {
         const query = input.value.trim();
         clearBtn.style.display = query ? 'flex' : 'none';
 
-        // Trigger pulse animation
         pulse.classList.remove('active');
-        void pulse.offsetWidth; // Reflow trick
+        void pulse.offsetWidth;
         if (query) pulse.classList.add('active');
 
-        // Debounced search
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            performSearch(query);
-        }, 250);
+        searchTimeout = setTimeout(() => performSearch(query), 250);
     });
 
     clearBtn.addEventListener('click', () => {
@@ -414,7 +664,6 @@ async function performSearch(query) {
         return;
     }
 
-    // Show skeletons briefly
     showSkeletons('notesGrid', 3);
 
     try {
@@ -426,16 +675,13 @@ async function performSearch(query) {
             updateNotesSubtitle(result.notes.length, true, query);
         }
     } catch (err) {
-        console.error('Search error:', err);
         // Fallback: client-side search
-        const filtered = allNotes.filter(note => {
-            const q = query.toLowerCase();
-            return (
-                note.courseCode.toLowerCase().includes(q) ||
-                note.courseName.toLowerCase().includes(q) ||
-                note.department.toLowerCase().includes(q)
-            );
-        });
+        const q = query.toLowerCase();
+        const filtered = allNotes.filter(note =>
+            note.courseCode.toLowerCase().includes(q) ||
+            note.courseName.toLowerCase().includes(q) ||
+            note.department.toLowerCase().includes(q)
+        );
         renderNotesGrid(filtered);
         updateNotesSubtitle(filtered.length, true, query);
     }
@@ -456,7 +702,6 @@ function updateNotesSubtitle(count, isSearch, query = '') {
    FETCH & RENDER NOTES
    =========================================== */
 async function fetchAndRenderNotes() {
-    // Show skeletons
     showSkeletons('recentGrid', 3);
     showSkeletons('notesGrid', 6);
 
@@ -474,13 +719,11 @@ async function fetchAndRenderNotes() {
         }
     } catch (err) {
         console.error('Fetch error:', err);
-        // Show empty state on connection error
         renderRecentUploads([]);
         renderNotesGrid([]);
     }
 }
 
-/* ─── Render Recent Uploads ─── */
 function renderRecentUploads(notes) {
     const grid = document.getElementById('recentGrid');
     const recent = notes.slice(0, 3);
@@ -492,14 +735,12 @@ function renderRecentUploads(notes) {
 
     grid.innerHTML = recent.map(note => createNoteCardHTML(note)).join('');
 
-    // Animate cards in
     gsap.fromTo(grid.querySelectorAll('.note-card'),
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
+        { opacity: 0, y: 30, rotateX: 5 },
+        { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out' }
     );
 }
 
-/* ─── Render Notes Grid ─── */
 function renderNotesGrid(notes) {
     const grid = document.getElementById('notesGrid');
 
@@ -520,19 +761,19 @@ function renderNotesGrid(notes) {
 
     grid.innerHTML = notes.map(note => createNoteCardHTML(note)).join('');
 
-    // Animate cards
     gsap.fromTo(grid.querySelectorAll('.note-card'),
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, stagger: 0.06, ease: 'power2.out' }
+        { opacity: 0, y: 20, rotateX: 3 },
+        { opacity: 1, y: 0, rotateX: 0, duration: 0.45, stagger: 0.07, ease: 'power2.out' }
     );
 
-    // Re-attach 3D tilt
     init3DCardTilt();
 }
 
-/* ─── Create Note Card HTML ─── */
 function createNoteCardHTML(note) {
     const timeAgo = getTimeAgo(note.uploadedAt);
+    const isDataUrl = note.pdfUrl && note.pdfUrl.startsWith('data:');
+    const openLabel = isDataUrl ? 'View PDF' : 'Open PDF';
+
     return `
         <div class="note-card" data-tilt>
             <div class="note-card-header">
@@ -556,15 +797,14 @@ function createNoteCardHTML(note) {
             </div>
             <div class="note-card-footer">
                 <span class="note-time"><i class="fas fa-clock"></i> ${timeAgo}</span>
-                <a href="${escapeHTML(note.pdfUrl)}" target="_blank" rel="noopener noreferrer" class="btn-open-pdf">
-                    Open PDF <i class="fas fa-arrow-right"></i>
-                </a>
+                <button class="btn-open-pdf" data-pdf-url="${escapeHTML(note.pdfUrl)}">
+                    ${openLabel} <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
         </div>
     `;
 }
 
-/* ─── Empty State HTML ─── */
 function getEmptyStateHTML(type) {
     return `
         <div class="empty-state">
@@ -586,7 +826,6 @@ function getEmptyStateHTML(type) {
     `;
 }
 
-/* ─── Skeleton Loading ─── */
 function showSkeletons(containerId, count) {
     const container = document.getElementById(containerId);
     let html = '';
@@ -606,7 +845,42 @@ function showSkeletons(containerId, count) {
 }
 
 /* ===========================================
-   SEARCH TAGS (Quick Filters)
+   PDF OPEN HANDLER (Event Delegation)
+   Handles both regular URLs and base64 data URLs
+   =========================================== */
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-open-pdf');
+    if (!btn) return;
+
+    const pdfUrl = btn.getAttribute('data-pdf-url');
+    if (!pdfUrl) return;
+
+    if (pdfUrl.startsWith('data:')) {
+        // Convert base64 data URL to blob and open
+        try {
+            const byteString = atob(pdfUrl.split(',')[1]);
+            const mimeString = pdfUrl.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+            // Clean up after a delay
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        } catch (err) {
+            console.error('Failed to open PDF:', err);
+            showToast('Failed to open this PDF. It may be corrupted.', 'error');
+        }
+    } else {
+        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+    }
+});
+
+/* ===========================================
+   SEARCH TAGS
    =========================================== */
 function updateSearchTags(notes) {
     const container = document.getElementById('searchTags');
@@ -616,16 +890,13 @@ function updateSearchTags(notes) {
         return;
     }
 
-    // Extract unique departments and course codes
     const departments = [...new Set(notes.map(n => n.department))];
     const courseCodes = [...new Set(notes.map(n => n.courseCode))];
 
     let html = '';
-
     departments.slice(0, 3).forEach(dept => {
         html += `<button class="search-tag" onclick="quickSearch('${escapeHTML(dept)}')">${escapeHTML(dept)}</button>`;
     });
-
     courseCodes.slice(0, 3).forEach(code => {
         html += `<button class="search-tag" onclick="quickSearch('${escapeHTML(code)}')">${escapeHTML(code)}</button>`;
     });
@@ -637,8 +908,6 @@ function quickSearch(term) {
     const input = document.getElementById('searchInput');
     input.value = term;
     input.dispatchEvent(new Event('input'));
-
-    // Scroll to notes
     document.getElementById('notes').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -646,25 +915,16 @@ function quickSearch(term) {
    STATISTICS
    =========================================== */
 function updateStats(notes) {
-    const totalNotes = notes.length;
-    const departments = [...new Set(notes.map(n => n.department))].length;
-    const courses = [...new Set(notes.map(n => n.courseCode))].length;
-    const semesters = [...new Set(notes.map(n => n.semester))].length;
-
-    animateCounter('statTotalNotes', totalNotes);
-    animateCounter('statTotalDepts', departments);
-    animateCounter('statTotalCourses', courses);
-    animateCounter('statTotalSemesters', semesters);
+    animateCounter('statTotalNotes', notes.length);
+    animateCounter('statTotalDepts', [...new Set(notes.map(n => n.department))].length);
+    animateCounter('statTotalCourses', [...new Set(notes.map(n => n.courseCode))].length);
+    animateCounter('statTotalSemesters', [...new Set(notes.map(n => n.semester))].length);
 }
 
 function updateHeroStats(notes) {
-    const totalNotes = notes.length;
-    const departments = [...new Set(notes.map(n => n.department))].length;
-    const courses = [...new Set(notes.map(n => n.courseCode))].length;
-
-    animateCounter('heroStatNotes', totalNotes);
-    animateCounter('heroStatDepts', departments);
-    animateCounter('heroStatCourses', courses);
+    animateCounter('heroStatNotes', notes.length);
+    animateCounter('heroStatDepts', [...new Set(notes.map(n => n.department))].length);
+    animateCounter('heroStatCourses', [...new Set(notes.map(n => n.courseCode))].length);
 }
 
 function animateCounter(elementId, target) {
@@ -678,18 +938,34 @@ function animateCounter(elementId, target) {
     function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-
-        // Ease out cubic
         const eased = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(start + (target - start) * eased);
-
-        el.textContent = current;
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
+        el.textContent = Math.round(start + (target - start) * eased);
+        if (progress < 1) requestAnimationFrame(update);
     }
     requestAnimationFrame(update);
+}
+
+/* ─── Stats Scroll Animation ─── */
+function initStatsScrollAnimation() {
+    const statsGrid = document.getElementById('statsGrid');
+    let animated = false;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !animated) {
+                animated = true;
+                gsap.fromTo(statsGrid.querySelectorAll('.stat-card'),
+                    { opacity: 0, y: 40, scale: 0.95 },
+                    {
+                        opacity: 1, y: 0, scale: 1,
+                        duration: 0.6, stagger: 0.12, ease: 'back.out(1.4)'
+                    }
+                );
+            }
+        });
+    }, { threshold: 0.2 });
+
+    observer.observe(statsGrid);
 }
 
 /* ===========================================
@@ -703,10 +979,8 @@ function init3DCardTilt() {
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-
             const rotateX = ((y - centerY) / centerY) * -4;
             const rotateY = ((x - centerX) / centerX) * 4;
-
             card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
         });
 
@@ -717,7 +991,23 @@ function init3DCardTilt() {
 }
 
 /* ===========================================
-   SCROLL REVEAL (AOS Init)
+   CARD GLOW CURSOR FOLLOW (Event Delegation)
+   =========================================== */
+function initCardGlowDelegate() {
+    document.addEventListener('mousemove', (e) => {
+        const card = e.target.closest('.note-card');
+        if (!card) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100);
+        const y = ((e.clientY - rect.top) / rect.height * 100);
+        card.style.setProperty('--card-glow-x', x + '%');
+        card.style.setProperty('--card-glow-y', y + '%');
+    });
+}
+
+/* ===========================================
+   SCROLL REVEAL (AOS)
    =========================================== */
 function initScrollReveal() {
     AOS.init({
@@ -741,11 +1031,7 @@ function escapeHTML(str) {
 
 function getTimeAgo(dateString) {
     if (!dateString) return 'Just now';
-
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now - date) / 1000);
-
+    const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
     if (seconds < 10) return 'Just now';
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
@@ -754,6 +1040,5 @@ function getTimeAgo(dateString) {
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     if (days < 30) return `${days}d ago`;
-    const months = Math.floor(days / 30);
-    return `${months}mo ago`;
+    return `${Math.floor(days / 30)}mo ago`;
 }
