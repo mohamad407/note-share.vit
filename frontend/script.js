@@ -6,7 +6,7 @@
 
 // ─── Backend URL ───
 // Replace with your deployed Render URL
-const API_BASE = 'https://YOUR_BACKEND_URL';
+const API_BASE =  "https://note-share-vit.onrender.com";
 
 // ─── State ───
 let allNotes = [];
