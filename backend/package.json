@@ -1,0 +1,23 @@
+{
+  "name": "notevault-api",
+  "version": "1.0.0",
+  "description": "NoteVault — College Notes Sharing Platform Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "notes",
+    "college",
+    "sharing",
+    "api",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  }
+}
