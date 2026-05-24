@@ -1,7 +1,3 @@
-/* ============================================
-   NOTEVAULT — Frontend JavaScript
-   ============================================ */
-
 const API_BASE = 'https://note-share-vit.onrender.com';
 
 let allNotes = [];
@@ -47,9 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchUserAnnouncements();
 });
 
-/* ===========================================
-   PARTICLE BACKGROUND
-   =========================================== */
 function initParticles() {
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
@@ -65,11 +58,7 @@ function initParticles() {
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
         const baseOpacity = Math.random() * 0.4 + 0.1;
-        particles.push({
-            x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-            radius: Math.random() * 1.5 + 0.5, opacity: baseOpacity, baseOpacity
-        });
+        particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, radius: Math.random() * 1.5 + 0.5, opacity: baseOpacity, baseOpacity });
     }
 
     function animate() {
@@ -84,7 +73,8 @@ function initParticles() {
             if (dist < 180) {
                 const force = (180 - dist) / 180;
                 p.opacity = p.baseOpacity + force * 0.5;
-                p.x += (dx / dist) * force * 0.3; p.y += (dy / dist) * force * 0.3;
+                p.x += (dx / dist) * force * 0.3;
+                p.y += (dy / dist) * force * 0.3;
             } else { p.opacity += (p.baseOpacity - p.opacity) * 0.05; }
             ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(0, 212, 255, ${p.opacity})`; ctx.fill();
@@ -104,22 +94,24 @@ function initParticles() {
     animate();
 }
 
-/* ===========================================
-   HERO ENTRANCE (GSAP)
-   =========================================== */
 function initHeroEntrance() {
+    // Hide elements with GSAP.set only AFTER GSAP loads
+    gsap.set('#heroBadge', { opacity: 0, y: 20 });
+    gsap.set('#heroTitle', { opacity: 0, y: 30 });
+    gsap.set('#heroSubtitle', { opacity: 0, y: 20 });
+    gsap.set('#heroActions', { opacity: 0, y: 20 });
+    gsap.set('#heroStats', { opacity: 0, y: 20 });
+    gsap.set('#heroScroll', { opacity: 0 });
+
     const tl = gsap.timeline({ delay: 0.3 });
-    tl.to('#heroBadge', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', startAt: { y: 20 } })
-      .to('#heroTitle', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', startAt: { y: 30 } }, '-=0.4')
-      .to('#heroSubtitle', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', startAt: { y: 20 } }, '-=0.4')
-      .to('#heroActions', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', startAt: { y: 20 } }, '-=0.35')
-      .to('#heroStats', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', startAt: { y: 20 } }, '-=0.3')
+    tl.to('#heroBadge', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' })
+      .to('#heroTitle', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4')
+      .to('#heroSubtitle', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.4')
+      .to('#heroActions', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.35')
+      .to('#heroStats', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
       .to('#heroScroll', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.2');
 }
 
-/* ===========================================
-   TYPING ANIMATION
-   =========================================== */
 function initTypingAnimation() {
     const phrases = ['One Click Away.', 'Shared Instantly.', 'Organized Simply.', 'Searchable Easily.', 'Free Forever.'];
     const typedEl = document.getElementById('typedText');
@@ -135,9 +127,6 @@ function initTypingAnimation() {
     type();
 }
 
-/* ===========================================
-   NAVBAR
-   =========================================== */
 function initNavbar() {
     const navbar = document.getElementById('navbar');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -174,9 +163,6 @@ function initSmoothScroll() {
     });
 }
 
-/* ===========================================
-   RIPPLE & MAGNETIC
-   =========================================== */
 function initRippleEffects() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-ripple'); if (!btn) return;
@@ -199,9 +185,6 @@ function initMagneticButtons() {
     });
 }
 
-/* ===========================================
-   UPLOAD MODE TOGGLE
-   =========================================== */
 function initUploadModeToggle() {
     const fileBtn = document.getElementById('modeFileBtn');
     const urlBtn = document.getElementById('modeUrlBtn');
@@ -211,9 +194,6 @@ function initUploadModeToggle() {
     urlBtn.addEventListener('click', () => { uploadMode = 'url'; urlBtn.classList.add('active'); fileBtn.classList.remove('active'); urlRow.style.display = ''; fileRow.style.display = 'none'; clearFileSelection(); });
 }
 
-/* ===========================================
-   FILE UPLOAD
-   =========================================== */
 function initFileUpload() {
     const dropZone = document.getElementById('fileDropZone');
     const fileInput = document.getElementById('fileInput');
@@ -253,9 +233,6 @@ function clearFileSelection() {
 
 function formatFileSize(bytes) { if (bytes < 1024) return bytes + ' B'; if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'; return (bytes / (1024 * 1024)).toFixed(2) + ' MB'; }
 
-/* ===========================================
-   TOAST & CONFETTI
-   =========================================== */
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div'); toast.className = `toast toast-${type}`;
@@ -281,9 +258,6 @@ function launchConfetti() {
     }
 }
 
-/* ===========================================
-   DELETE MODAL
-   =========================================== */
 function initDeleteModal() {
     document.getElementById('modalCancel').addEventListener('click', closeDeleteModal);
     document.getElementById('deleteModal').addEventListener('click', (e) => { if (e.target.id === 'deleteModal') closeDeleteModal(); });
@@ -314,9 +288,6 @@ async function executeDelete(noteId) {
     finally { confirmBtn.innerHTML = originalHTML; confirmBtn.disabled = false; }
 }
 
-/* ===========================================
-   FORM HANDLING
-   =========================================== */
 function initForm() {
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault(); clearFormErrors();
@@ -346,9 +317,6 @@ function validateForm(data) {
 function isValidUrl(s) { try { new URL(s); return true; } catch (_) { return false; } }
 function clearFormErrors() { document.querySelectorAll('.form-error').forEach(e => e.textContent = ''); document.querySelectorAll('.input-error').forEach(e => e.classList.remove('input-error')); }
 
-/* ===========================================
-   SEARCH
-   =========================================== */
 function initSearch() {
     const input = document.getElementById('searchInput');
     const clearBtn = document.getElementById('searchClear');
@@ -366,9 +334,6 @@ async function performSearch(query) {
 
 function updateNotesSubtitle(count, isSearch, query = '') { const el = document.getElementById('notesSubtitle'); el.textContent = isSearch ? (count > 0 ? `Found ${count} result${count !== 1 ? 's' : ''} for "${query}"` : `No results found for "${query}"`) : 'Browse all uploaded notes from every department.'; }
 
-/* ===========================================
-   FETCH & RENDER
-   =========================================== */
 async function fetchAndRenderNotes() {
     showSkeletons('recentGrid', 3); showSkeletons('notesGrid', 6);
     try { const res = await fetch(`${API_BASE}/notes`); const result = await res.json(); if (res.ok) { allNotes = result.notes || []; renderRecentUploads(allNotes); renderNotesGrid(allNotes); updateStats(allNotes); updateSearchTags(allNotes); updateHeroStats(allNotes); } }
@@ -406,9 +371,6 @@ function getEmptyStateHTML(type) {
 
 function showSkeletons(id, count) { const el = document.getElementById(id); let h = ''; for (let i = 0; i < count; i++) h += '<div class="skeleton-card"><div class="skeleton-line w-40"></div><div class="skeleton-line w-80"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-50"></div><div class="skeleton-line w-70"></div><div class="skeleton-line w-30"></div></div>'; el.innerHTML = h; }
 
-/* ===========================================
-   PDF OPEN HANDLER
-   =========================================== */
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-open-pdf'); if (!btn) return;
     const url = btn.getAttribute('data-pdf-url'); if (!url) return;
@@ -416,9 +378,6 @@ document.addEventListener('click', (e) => {
     else { window.open(url, '_blank', 'noopener,noreferrer'); }
 });
 
-/* ===========================================
-   SEARCH TAGS
-   =========================================== */
 function updateSearchTags(notes) {
     const container = document.getElementById('searchTags');
     if (!notes.length) { container.innerHTML = '<span class="search-tag-hint">Quick filters will appear here after you upload notes</span>'; return; }
@@ -430,17 +389,11 @@ function updateSearchTags(notes) {
 
 function quickSearch(term) { const input = document.getElementById('searchInput'); input.value = term; input.dispatchEvent(new Event('input')); document.getElementById('notes').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
-/* ===========================================
-   STATISTICS
-   =========================================== */
 function updateStats(notes) { animateCounter('statTotalNotes', notes.length); animateCounter('statTotalDepts', [...new Set(notes.map(n => n.department))].length); animateCounter('statTotalCourses', [...new Set(notes.map(n => n.courseCode))].length); animateCounter('statTotalSemesters', [...new Set(notes.map(n => n.semester))].length); }
 function updateHeroStats(notes) { animateCounter('heroStatNotes', notes.length); animateCounter('heroStatDepts', [...new Set(notes.map(n => n.department))].length); animateCounter('heroStatCourses', [...new Set(notes.map(n => n.courseCode))].length); }
 function animateCounter(id, target) { const el = document.getElementById(id); if (!el) return; const start = parseInt(el.textContent) || 0, startTime = performance.now(), duration = 1200; function update(t) { const p = Math.min((t - startTime) / duration, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(update); } requestAnimationFrame(update); }
 function initStatsScrollAnimation() { const grid = document.getElementById('statsGrid'); let done = false; new IntersectionObserver((entries) => { if (entries[0].isIntersecting && !done) { done = true; gsap.fromTo(grid.querySelectorAll('.stat-card'), { opacity: 0, y: 40, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.12, ease: 'back.out(1.4)' }); } }, { threshold: 0.2 }).observe(grid); }
 
-/* ===========================================
-   3D TILT & CARD GLOW
-   =========================================== */
 function init3DCardTilt() {
     document.querySelectorAll('.note-card[data-tilt]').forEach(card => {
         card.addEventListener('mousemove', (e) => { const r = card.getBoundingClientRect(); card.style.transform = `perspective(800px) rotateX(${((e.clientY - r.top - r.height / 2) / (r.height / 2)) * -4}deg) rotateY(${((e.clientX - r.left - r.width / 2) / (r.width / 2)) * 4}deg) translateY(-4px)`; });
@@ -452,116 +405,25 @@ function initCardGlowDelegate() {
     document.addEventListener('mousemove', (e) => { const card = e.target.closest('.note-card'); if (!card) return; const r = card.getBoundingClientRect(); card.style.setProperty('--card-glow-x', ((e.clientX - r.left) / r.width * 100) + '%'); card.style.setProperty('--card-glow-y', ((e.clientY - r.top) / r.height * 100) + '%'; });
 }
 
-/* ===========================================
-   USER ANNOUNCEMENTS
-   =========================================== */
 async function fetchUserAnnouncements() {
     const container = document.getElementById('userAnnouncementsList');
     if (!container) return;
-
-    // Show skeleton while loading
-    container.innerHTML = `
-        <div class="user-announcement-card" style="opacity:0.5">
-            <div class="user-announcement-header">
-                <div style="height:20px;width:200px;border-radius:6px" class="skeleton"></div>
-            </div>
-            <div style="height:16px;width:80%;border-radius:4px;margin-left:38px" class="skeleton"></div>
-        </div>
-        <div class="user-announcement-card" style="opacity:0.3">
-            <div class="user-announcement-header">
-                <div style="height:20px;width:160px;border-radius:6px" class="skeleton"></div>
-            </div>
-            <div style="height:16px;width:60%;border-radius:4px;margin-left:38px" class="skeleton"></div>
-        </div>
-    `;
-
+    container.innerHTML = '<div class="user-announcement-card" style="opacity:0.5"><div class="user-announcement-header"><div style="height:20px;width:200px;border-radius:6px" class="skeleton"></div></div><div style="height:16px;width:80%;border-radius:4px;margin-left:38px" class="skeleton"></div></div><div class="user-announcement-card" style="opacity:0.3"><div class="user-announcement-header"><div style="height:20px;width:160px;border-radius:6px" class="skeleton"></div></div><div style="height:16px;width:60%;border-radius:4px;margin-left:38px" class="skeleton"></div></div>';
     try {
         const res = await fetch(`${API_BASE}/admin/announcements`);
         const data = await res.json();
-
         if (res.ok && data.announcements && data.announcements.length > 0) {
-            container.innerHTML = data.announcements.map(a => `
-                <div class="user-announcement-card">
-                    <div class="user-announcement-header">
-                        <div class="user-announcement-title">
-                            <span class="ann-icon"><i class="fas fa-bullhorn"></i></span>
-                            ${escapeHTML(a.title)}
-                        </div>
-                        <span class="user-announcement-date">${getTimeAgo(a.createdAt)}</span>
-                    </div>
-                    <div class="user-announcement-message">${escapeHTML(a.message)}</div>
-                </div>
-            `).join('');
-
-            // Animated entrance — cards slide in one by one from left
-            gsap.fromTo(container.querySelectorAll('.user-announcement-card'),
-                {
-                    opacity: 0,
-                    x: -40,
-                    scale: 0.97,
-                    filter: 'blur(4px)'
-                },
-                {
-                    opacity: 1,
-                    x: 0,
-                    scale: 1,
-                    filter: 'blur(0px)',
-                    duration: 0.6,
-                    stagger: 0.15,
-                    ease: 'power3.out'
-                }
-            );
-
-            // Subtle continuous floating animation on each card
-            container.querySelectorAll('.user-announcement-card').forEach((card, i) => {
-                gsap.to(card, {
-                    y: -3,
-                    duration: 2.5 + i * 0.3,
-                    ease: 'sine.inOut',
-                    yoyo: true,
-                    repeat: -1,
-                    delay: i * 0.2
-                });
-            });
-
-            // Hide the entire announcements section if no announcements
+            container.innerHTML = data.announcements.map(a => `<div class="user-announcement-card"><div class="user-announcement-header"><div class="user-announcement-title"><span class="ann-icon"><i class="fas fa-bullhorn"></i></span>${escapeHTML(a.title)}</div><span class="user-announcement-date">${getTimeAgo(a.createdAt)}</span></div><div class="user-announcement-message">${escapeHTML(a.message)}</div></div>`).join('');
+            gsap.fromTo(container.querySelectorAll('.user-announcement-card'), { opacity: 0, x: -40, scale: 0.97, filter: 'blur(4px)' }, { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)', duration: 0.6, stagger: 0.15, ease: 'power3.out' });
+            container.querySelectorAll('.user-announcement-card').forEach((card, i) => { gsap.to(card, { y: -3, duration: 2.5 + i * 0.3, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: i * 0.2 }); });
         } else {
-            container.innerHTML = `
-                <div class="announcements-empty-user">
-                    <i class="fas fa-bullhorn"></i>
-                    <p>No announcements right now.</p>
-                </div>
-            `;
-            gsap.fromTo(container.querySelector('.announcements-empty-user'),
-                { opacity: 0, y: 10 },
-                { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
-            );
+            container.innerHTML = '<div class="announcements-empty-user"><i class="fas fa-bullhorn"></i><p>No announcements right now.</p></div>';
+            gsap.fromTo(container.querySelector('.announcements-empty-user'), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
         }
-    } catch (err) {
-        // Silently fail — don't break the page
-        container.innerHTML = '';
-    }
+    } catch (err) { container.innerHTML = ''; }
 }
 
-/* ===========================================
-   SCROLL REVEAL (AOS)
-   =========================================== */
 function initScrollReveal() { AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60, disable: window.innerWidth < 768 ? 'phone' : false }); }
 
-/* ===========================================
-   UTILITIES
-   =========================================== */
 function escapeHTML(str) { if (!str) return ''; const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
-
-function getTimeAgo(dateString) {
-    if (!dateString) return 'Just now';
-    const s = Math.floor((Date.now() - new Date(dateString)) / 1000);
-    if (s < 10) return 'Just now';
-    if (s < 60) return s + 's ago';
-    const m = Math.floor(s / 60);
-    if (m < 60) return m + 'm ago';
-    const h = Math.floor(m / 60);
-    if (h < 24) return h + 'h ago';
-    const d = Math.floor(h / 24);
-    return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
-}
+function getTimeAgo(dateString) { if (!dateString) return 'Just now'; const s = Math.floor((Date.now() - new Date(dateString)) / 1000); if (s < 10) return 'Just now'; if (s < 60) return s + 's ago'; const m = Math.floor(s / 60); if (m < 60) return m + 'm ago'; const h = Math.floor(m / 60); if (h < 24) return h + 'h ago'; const d = Math.floor(h / 24); return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago'; }
