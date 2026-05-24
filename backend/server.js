@@ -31,8 +31,8 @@ app.use(cors());
 
 // ─── Admin Configuration ───
 // Set these via environment variables in production
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'asif';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Ummulhaina@20';
 
 // ─── In-Memory Storage ───
 let notes = [];
