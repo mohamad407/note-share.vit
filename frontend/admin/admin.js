@@ -2,7 +2,7 @@
    NOTEVAULT ADMIN — Dashboard JavaScript
    ============================================ */
 
-const API_BASE = 'https://YOUR_BACKEND_URL';
+const API_BASE ='https://note-share-vit.onrender.com';
 
 let adminToken = null;
 let allNotes = [];
