@@ -759,6 +759,67 @@ function initCardGlowDelegate() {
 function initScrollReveal() {
     AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60, disable: window.innerWidth < 768 ? 'phone' : false });
 }
+/* ===========================================
+   TOP ANNOUNCEMENT BANNER
+   Shows a fixed banner when admin posts announcements
+   =========================================== */
+let topBannerTimer = null;
+let topBannerDismissed = false;
+
+function initTopBanner() {
+    // Check every 15 seconds for new announcements
+    setInterval(fetchTopAnnouncements, 15000);
+}
+
+async function fetchTopAnnouncements() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/announcements`);
+        const data = await res.json();
+
+        if (topBannerDismissed) return; // User dismissed — don't show again
+
+        if (res.ok && data.announcements && data.0.announcements.length > 0) {
+            const ann = data.announcements[0]; // Most recent one
+            const banner = document.getElementById('topBanner');
+            const textEl = document.getElementById('topBannerText');
+
+            // Don't show if already showing the same announcement
+            if (banner.classList.contains('visible') && textEl.dataset.currentId === ann.id) return;
+
+            // Update content and show
+            textEl.dataset.currentId = ann.id;
+            textEl.innerHTML = `<strong>${escapeHTML(ann.title)}</strong> — ${escapeHTML(ann.message)}`;
+            banner.classList.add('visible');
+            topBannerDismissed = false;
+
+            // Reset auto-hide timer
+            clearTimeout(topBannerTimer);
+            topBannerTimer = setTimeout(() => {
+                banner.classList.remove('visible');
+            }, 8000);
+
+            // Clear dismissed flag when user closes it manually
+            document.getElementById('topBannerClose').addEventListener('click', () => {
+                banner.classList.remove('visible');
+                topBannerDismissed = true;
+                clearTimeout(topBannerTimer);
+            });
+        } else {
+            // No announcements — hide if visible
+            const banner = document.getElementById('topBanner');
+            if (banner.classList.contains('visible')) {
+                banner.classList.remove('visible');
+            }
+            topBannerDismissed = false;
+        }
+    } catch (err) {
+        // Silently fail — don't break the page
+        const banner = document.getElementById('topBanner');
+        if (banner.classList.contains('visible')) {
+            banner.classList.remove('visible');
+        }
+    }
+}
 
 /* ===========================================
    UTILITIES
