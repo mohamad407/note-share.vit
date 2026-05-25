@@ -760,64 +760,43 @@ function initScrollReveal() {
     AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60, disable: window.innerWidth < 768 ? 'phone' : false });
 }
 /* ===========================================
-   TOP ANNOUNCEMENT BANNER
-   Shows a fixed banner when admin posts announcements
+   USER ANNOUNCEMENTS
    =========================================== */
-let topBannerTimer = null;
-let topBannerDismissed = false;
+async function fetchUserAnnouncements() {
+    const container = document.getElementById('userAnnouncementsList');
+    if (!container) return;
 
-function initTopBanner() {
-    // Check every 15 seconds for new announcements
-    setInterval(fetchTopAnnouncements, 15000);
-}
-
-async function fetchannouncements() {
     try {
         const res = await fetch(`${API_BASE}/admin/announcements`);
         const data = await res.json();
 
-        if (topBannerDismissed) return; // User dismissed — don't show again
+        if (res.ok && data.announcements && data.announcements.length > 0) {
+            container.innerHTML = data.announcements.map(a => `
+                <div class="user-announcement-card">
+                    <div class="user-announcement-title">
+                        <i class="fas fa-bullhorn"></i>
+                        ${escapeHTML(a.title)}
+                        <span class="user-announcement-date">${getTimeAgo(a.createdAt)}</span>
+                    </div>
+                    <div class="user-announcement-message">${escapeHTML(a.message)}</div>
+                </div>
+            `).join('');
 
-        if (res.ok && data.announcements && data.0.announcements.length > 0) {
-            const ann = data.announcements[0]; // Most recent one
-            const banner = document.getElementById('topBanner');
-            const textEl = document.getElementById('topBannerText');
-
-            // Don't show if already showing the same announcement
-            if (banner.classList.contains('visible') && textEl.dataset.currentId === ann.id) return;
-
-            // Update content and show
-            textEl.dataset.currentId = ann.id;
-            textEl.innerHTML = `<strong>${escapeHTML(ann.title)}</strong> — ${escapeHTML(ann.message)}`;
-            banner.classList.add('visible');
-            topBannerDismissed = false;
-
-            // Reset auto-hide timer
-            clearTimeout(topBannerTimer);
-            topBannerTimer = setTimeout(() => {
-                banner.classList.remove('visible');
-            }, 8000);
-
-            // Clear dismissed flag when user closes it manually
-            document.getElementById('topBannerClose').addEventListener('click', () => {
-                banner.classList.remove('visible');
-                topBannerDismissed = true;
-                clearTimeout(topBannerTimer);
-            });
+            // Animate cards in
+            gsap.fromTo(container.querySelectorAll('.user-announcement-card'),
+                { opacity: 0, x: -20 },
+                { opacity: 1, x: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' }
+            );
         } else {
-            // No announcements — hide if visible
-            const banner = document.getElementById('topBanner');
-            if (banner.classList.contains('visible')) {
-                banner.classList.remove('visible');
-            }
-            topBannerDismissed = false;
+            container.innerHTML = `
+                <div class="announcements-empty-user">
+                    <i class="fas fa-bullhorn"></i>
+                    No announcements right now.
+                </div>
+            `;
         }
     } catch (err) {
-        // Silently fail — don't break the page
-        const banner = document.getElementById('topBanner');
-        if (banner.classList.contains('visible')) {
-            banner.classList.remove('visible');
-        }
+        container.innerHTML = '';
     }
 }
 
