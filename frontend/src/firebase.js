@@ -1,0 +1,1 @@
+const firebaseConfig = { apiKey: "AIzaSyD2jz8R-Ur7oX5lFtxroZ5Bs1xhO44-rdA", authDomain: "notevault-1f4bb.firebaseapp.com", projectId: "notevault-1f4bb", storageBucket: "notevault-1f4bb.firebasestorage.app", messagingSenderId: "600109075790", appId: "1:600109075790:web:71626e8701726f3161e21f", measurementId: "G-484XPXQLN7" };
