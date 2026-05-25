@@ -771,7 +771,7 @@ function initTopBanner() {
     setInterval(fetchTopAnnouncements, 15000);
 }
 
-async function fetchTopAnnouncements() {
+async function fetchannouncements() {
     try {
         const res = await fetch(`${API_BASE}/admin/announcements`);
         const data = await res.json();
