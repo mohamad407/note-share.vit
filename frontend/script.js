@@ -40,11 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initScrollReveal();
     initCardGlowDelegate();
-    initDeleteModal();
     fetchAndRenderNotes();
     initSmoothScroll();
     init3DCardTilt();
     initStatsScrollAnimation();
+    fetchUserAnnouncements();   // ← ADD THIS LINE
 });
 
 /* ===========================================
