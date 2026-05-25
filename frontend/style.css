@@ -476,110 +476,71 @@ section { position: relative; z-index: 1; padding: 100px 0; }
     .modal-actions { flex-direction: column-reverse; }
 }
 /* ============================================
-   TOP ANNOUNCEMENT BANNER
-   Fixed banner above navbar when admin posts
+   USER ANNOUNCEMENTS BANNER
    ============================================ */
-.top-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1001;
-    transform: translateY(-100%);
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none;
-}
-
-.top-banner.visible {
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-.top-banner-inner {
-    max-width: 900px;
+.announcements-banner-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 780px;
     margin: 0 auto;
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    background: rgba(0, 212, 255, 0.06);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.12);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 212, 255, 0.06);
 }
 
-/* Adjust navbar to sit below the banner when visible */
-.top-banner.visible ~ #navbar {
-    top: 64px;
-}
-
-.top-banner-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(0, 212, 255, 0.12);
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: var(--neon-blue);
-    flex-shrink: 0;
-    animation: bannerPulse 2s ease-in-out infinite;
-}
-
-@keyframes bannerPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
-    50% { box-shadow: 0 0 0 10px rgba(0, 212, 255, 0.2); }
-}
-
-.top-banner-text {
-    flex: 1;
-    min-width: 0;
-}
-
-.top-banner-text p {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.top-banner-text strong {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.top-banner-close {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 13px;
-    flex-shrink: 0;
+.user-announcement-card {
+    padding: 20px 24px;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-left: 3px solid var(--neon-blue);
     transition: all var(--transition-fast);
 }
 
-.top-banner-close:hover {
-    background: rgba(255, 77, 109, 0.12);
-    border-color: rgba(255, 77, 109, 0.25);
-    color: var(--neon-pink);
+.user-announcement-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--glass-border-hover);
+    border-left-color: var(--neon-blue);
+    transform: translateX(4px);
 }
 
-/* Mobile responsive */
-@media (max-width: 640px) {
-    .top-banner-text p {
-        font-size: 12px;
-    }
+.user-announcement-title {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-announcement-title i {
+    color: var(--neon-blue);
+    font-size: 14px;
+}
+
+.user-announcement-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+.user-announcement-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.announcements-empty-user {
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+    color: var(--text-dim);
+}
+
+.announcements-empty-user i {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.5;
 }
