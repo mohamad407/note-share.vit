@@ -74,32 +74,30 @@ function initGoogleAuth() {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 
-const loginBtn = document.getElementById("googleLoginBtn");
 const authScreen = document.getElementById("authScreen");
 const mainWebsite = document.getElementById("mainWebsite");
+const provider = new firebase.auth.GoogleAuthProvider();
 
-loginBtn.addEventListener("click", async () => {
+document.getElementById("googleLoginBtn").addEventListener("click", async () => {
 
     try {
 
-        const result = await signInWithPopup(auth, provider);
+        const result = await firebase.auth().signInWithPopup(provider);
 
         const user = result.user;
 
         if (!user.email.endsWith("@vitstudent.ac.in")) {
 
-            await signOut(auth);
+            alert("Only VIT student emails allowed");
 
-            alert("Only VIT student emails are allowed.");
+            await firebase.auth().signOut();
 
             return;
         }
 
-        authScreen.style.display = "none";
-        mainWebsite.style.display = "block";
+        showUser(user);
 
     } catch (error) {
 
@@ -107,8 +105,8 @@ loginBtn.addEventListener("click", async () => {
 
         alert(error.message);
     }
-
 });
+
     if (logoutBtn) {
 
         logoutBtn.addEventListener('click', async () => {
