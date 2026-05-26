@@ -20,7 +20,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="authScreen">
+    <button id="googleLoginBtn">
+        Login with VIT Mail
+    </button>
+</div>
 
+<div id="mainWebsite" style="display:none;">
     <!-- Particle Canvas Background -->
     <canvas id="particleCanvas"></canvas>
 
@@ -494,5 +500,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 </script>
  <script type="module" src="script.js"></script>
+    </div>
 </body>
 </html> 
