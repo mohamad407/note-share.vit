@@ -94,47 +94,54 @@ function updateAuthUI() {
     const userPhoto =
         document.getElementById('userPhoto');
 
-    const authScreen =
-        document.getElementById('authScreen');
-
-    const mainWebsite =
-        document.getElementById('mainWebsite');
-
+    // USER LOGGED IN
     if (currentUser) {
 
-        if (authScreen) {
-            authScreen.style.display = 'none';
-        }
-
-        if (mainWebsite) {
-            mainWebsite.style.display = 'block';
-        }
-
+        // KEEP LOGIN BUTTON VISIBLE
         if (loginBtn) {
-            loginBtn.style.display = 'none';
+
+            loginBtn.innerText =
+                'Logged In Successfully';
+
+            loginBtn.disabled = true;
+
+            loginBtn.style.opacity = '0.7';
         }
 
+        // SHOW USER PROFILE IF EXISTS
         if (userBox) {
             userBox.style.display = 'flex';
         }
 
-        // FIXED NULL ERRORS
+        // SAFE NULL CHECKS
         if (userName) {
-            userName.innerText = currentUser.name || '';
+            userName.innerText =
+                currentUser.name || '';
         }
 
         if (userEmail) {
-            userEmail.innerText = currentUser.email || '';
+            userEmail.innerText =
+                currentUser.email || '';
         }
 
         if (userPhoto) {
-            userPhoto.src = currentUser.photo || '';
+            userPhoto.src =
+                currentUser.photo || '';
         }
 
-    } else {
+    }
+
+    // USER NOT LOGGED IN
+    else {
 
         if (loginBtn) {
-            loginBtn.style.display = 'flex';
+
+            loginBtn.innerText =
+                'Login with VIT Mail';
+
+            loginBtn.disabled = false;
+
+            loginBtn.style.opacity = '1';
         }
 
         if (userBox) {
