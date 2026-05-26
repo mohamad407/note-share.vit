@@ -7,14 +7,7 @@ const auth = firebase.auth();
 
 const googleLoginBtn = document.getElementById('googleLoginBtn');
 const navLoginBtn = document.getElementById('navLoginBtn');
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
 // ============================================
