@@ -1,13 +1,13 @@
 /* ============================================
-   NOTEVAULT — Frontend JavaScript (FIXED)
+   NOTEVAULT — Frontend JavaScript
    ============================================ */
 
 const API_BASE = 'https://note-share-vit.onrender.com';
 const ALLOWED_DOMAIN = "@vitstudent.ac.in";
 
-// --- Safe Firebase Initialization (v8) ---
+// --- Firebase Initialization ---
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig); // Uses firebaseConfig from your HTML
+    firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -23,7 +23,7 @@ let selectedFileData = null;
 let uploadMode = 'file';
 let deleteTargetId = null;
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_TYPE = 'application/pdf';
 
 function getUploaderId() {
@@ -36,9 +36,8 @@ function getUploaderId() {
 }
 const MY_UPLOADER_ID = getUploaderId();
 
-
 // ============================================
-// GOOGLE AUTH STATE & UI
+// AUTH STATE & UI MANAGEMENT
 // ============================================
 function saveUser(user) {
     currentUser = {
@@ -58,54 +57,54 @@ function getSavedUser() {
 function logoutUser() {
     localStorage.removeItem('notevault_user');
     currentUser = null;
-    updateAuthUI(); // Smoothly update UI without reloading
+    updateAuthUI();
 }
 
 function updateAuthUI() {
-    // We grab these elements INSIDE the function so they are never null
+    // Grab elements exactly as named in your HTML
     const loginScreen = document.getElementById("loginScreen");
     const mainWebsite = document.getElementById("mainWebsite");
     const userBox = document.getElementById('userProfileBox');
     const userName = document.getElementById('userName');
-    const userEmail = document.getElementById('userEmail');
-    const userPhoto = document.getElementById('userPhoto');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
     const navLoginBtn = document.getElementById('navLoginBtn');
 
     if (currentUser) {
+        // HIDE LOGIN, SHOW WEBSITE
         if (loginScreen) loginScreen.style.display = 'none';
         if (mainWebsite) mainWebsite.style.display = 'block';
         if (googleLoginBtn) googleLoginBtn.style.display = 'none';
         if (navLoginBtn) navLoginBtn.style.display = 'none';
         if (userBox) userBox.style.display = 'flex';
-
         if (userName) userName.textContent = currentUser.name;
-        if (userEmail) userEmail.textContent = currentUser.email;
-        if (userPhoto) userPhoto.src = currentUser.photo;
     } else {
+        // SHOW LOGIN, HIDE WEBSITE
         if (loginScreen) loginScreen.style.display = 'flex';
         if (mainWebsite) mainWebsite.style.display = 'none';
         if (googleLoginBtn) googleLoginBtn.style.display = 'flex';
-        if (navLoginBtn) navLoginBtn.style.display = 'flex';
+        if (navLoginBtn) navLoginBtn.style.display = ''; // Resets to CSS default
         if (userBox) userBox.style.display = 'none';
     }
 }
 
 function initGoogleAuth() {
-    // 1. Check Redirect Result (Triggers when returning from Google Login page)
+    // 1. Handle Redirect Result (When user comes back from Google Login)
     auth.getRedirectResult().then((result) => {
         if (result.user) {
             processAuthUser(result.user);
         } else if (!currentUser) {
-            // No redirect result, restore session from local storage if exists
+            // No redirect, restore session if exists
             currentUser = getSavedUser();
             updateAuthUI();
         }
     }).catch((error) => {
-        handleAuthError(error);
+        console.error("Redirect Error:", error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showToast("Login failed. Check console or try again.", "error");
+        }
     });
 
-    // 2. Handle Persistent Sessions (e.g., user refreshes page later)
+    // 2. Handle Persistent Sessions (Catches redirect instantly)
     auth.onAuthStateChanged((user) => {
         if (user && !currentUser) {
             processAuthUser(user);
@@ -114,7 +113,7 @@ function initGoogleAuth() {
         }
     });
 
-    // 3. Attach Login Button Listeners
+    // 3. Attach Click Listeners
     const googleLoginBtn = document.getElementById('googleLoginBtn');
     const navLoginBtn = document.getElementById('navLoginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -133,7 +132,6 @@ function initGoogleAuth() {
         });
     }
 
-    // 4. Attach Logout Listener
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             auth.signOut();
@@ -151,19 +149,11 @@ function processAuthUser(user) {
     updateAuthUI();
 }
 
-function handleAuthError(error) {
-    console.error("Auth Error:", error);
-    if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/auth-domain-config-required') {
-        showToast("Login failed. Please try again.", "error");
-    }
-}
-
-
 // ============================================
-// INITIALIZATION ON DOM READY
+// DOM READY INITIALIZATION
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    initGoogleAuth();      // Must be first to handle login state
+function initApp() {
+    initGoogleAuth(); // Must be first
     initParticles();
     initHeroEntrance();
     initTypingAnimation();
@@ -183,7 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderNotes();
     initSmoothScroll();
     fetchUserAnnouncements();
-});
+}
+
+// Failsafe DOM Ready check
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp(); // DOM already loaded
+}
 
 
 /* ===========================================
@@ -973,172 +970,4 @@ function getTimeAgo(dateString) {
     if (h < 24) return h + 'h ago';
     const d = Math.floor(h / 24);
     return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
-}
-/* ===========================================
-   GOOGLE LOGIN - FULLY CORRECTED
-=========================================== */
-
-// --- Configuration ---
-const ALLOWED_DOMAIN = "@vitstudent.ac.in";
-
-// --- Toast Notification System (Replaces alert()) ---
-(function initToastSystem() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-family: system-ui, sans-serif; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateX(120%); transition: transform 0.3s ease; pointer-events: auto; }
-        .toast.show { transform: translateX(0); }
-        .toast-error { background-color: #e74c3c; }
-        .toast-success { background-color: #2ecc71; }
-        .toast-info { background-color: #3498db; }
-    `;
-    document.head.appendChild(style);
-    
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    container.id = 'toastContainer';
-    document.body.appendChild(container);
-})();
-
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    
-    requestAnimationFrame(() => toast.classList.add('show'));
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-}
-
-// --- DOM Caching (Safe fallbacks) ---
-const DOM = {
-    loginScreen: document.getElementById("loginScreen"),
-    mainWebsite: document.getElementById("mainWebsite"),
-    userProfileBox: document.getElementById("userProfileBox"),
-    userPhoto: document.getElementById("userPhoto"),
-    userName: document.getElementById("userName"),
-    userEmail: document.getElementById("userEmail"),
-    logoutBtn: document.getElementById("logoutBtn"),
-    googleLoginBtn: document.getElementById("googleLoginBtn"),
-    navLoginBtn: document.getElementById("navLoginBtn")
-};
-
-// --- Helper Functions ---
-function isAllowedEmail(email) {
-    return email?.toLowerCase().endsWith(ALLOWED_DOMAIN);
-}
-
-// --- UI State Management ---
-function showUser(user) {
-    if (DOM.loginScreen) DOM.loginScreen.style.display = "none";
-    if (DOM.mainWebsite) DOM.mainWebsite.style.display = "block";
-    if (DOM.userProfileBox) DOM.userProfileBox.style.display = "flex";
-    
-    if (DOM.userPhoto) DOM.userPhoto.src = user.photoURL;
-    if (DOM.userName) DOM.userName.textContent = user.displayName; // textContent is safer than innerText
-    if (DOM.userEmail) DOM.userEmail.textContent = user.email;
-
-    if (DOM.navLoginBtn) DOM.navLoginBtn.style.display = "none";
-}
-
-function showLoginScreen() {
-    if (DOM.loginScreen) DOM.loginScreen.style.display = "flex";
-    if (DOM.mainWebsite) DOM.mainWebsite.style.display = "none";
-    if (DOM.userProfileBox) DOM.userProfileBox.style.display = "none";
-
-    if (DOM.navLoginBtn) DOM.navLoginBtn.style.display = ""; // Resets to default CSS
-}
-
-// --- Auth Logic ---
-async function handleGoogleLogin() {
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-
-        // Client-side validation
-        if (!isAllowedEmail(user.email)) {
-            await auth.signOut();
-            showToast("Access Denied: Only VIT student emails are allowed.", "error");
-            return;
-        }
-
-        showUser(user);
-        showToast(`Welcome, ${user.displayName || 'Student'}!`, "success");
-
-    } catch (error) {
-        // Don't show an error if the user simply closed the popup
-        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-            return;
-        }
-
-        console.error("Login Error:", error.code, error.message);
-        
-        // User-friendly error messages
-        let errorMessage = "An unexpected error occurred. Please try again.";
-        if (error.code === 'auth/network-request-failed') {
-            errorMessage = "Network error. Please check your internet connection.";
-        } else if (error.code === 'auth/too-many-requests') {
-            errorMessage = "Too many failed attempts. Please wait a moment and try again.";
-        }
-        
-        showToast(errorMessage, "error");
-    }
-}
-
-function checkLoginState() {
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            if (isAllowedEmail(user.email)) {
-                showUser(user);
-            } else {
-                // Signed in but wrong domain, kick them out silently
-                auth.signOut();
-            }
-        } else {
-            showLoginScreen();
-        }
-    });
-}
-
-// --- Event Listeners ---
-if (DOM.googleLoginBtn) {
-    DOM.googleLoginBtn.addEventListener("click", handleGoogleLogin);
-}
-
-if (DOM.navLoginBtn) {
-    DOM.navLoginBtn.addEventListener("click", handleGoogleLogin);
-}
-
-if (DOM.logoutBtn) {
-    DOM.logoutBtn.addEventListener("click", async () => {
-        try {
-            await auth.signOut();
-            showLoginScreen(); // Smoothly update UI without reloading the page
-            showToast("Logged out successfully.", "info");
-        } catch (error) {
-            console.error("Logout Error:", error);
-            // Fallback to reload only if logout fails to prevent stuck states
-            location.reload(); 
-        }
-    });
-}
-
-// --- Initialize ---
-// Ensure 'auth' is already defined (e.g., const auth = firebase.auth();) before this script runs
-if (typeof auth !== 'undefined') {
-    checkLoginState();
-} else {
-    console.error("Firebase auth is not defined. Make sure firebase.initializeApp() runs first.");
 }
