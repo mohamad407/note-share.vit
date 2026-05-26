@@ -3,6 +3,14 @@
    ============================================ */
 
 const API_BASE = 'https://note-share-vit.onrender.com';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 // ============================================
 // GOOGLE AUTH
 // ============================================
