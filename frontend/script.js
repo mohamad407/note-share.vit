@@ -777,3 +777,137 @@ function getTimeAgo(dateString) {
     const d = Math.floor(h / 24);
     return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
 }
+/* ===========================================
+   ANNOUNCEMENT SYSTEM
+   ===========================================
+   Fetches from: YOUR_BACKEND_URL/announcements
+   
+   Expected API response format:
+   {
+     "announcements": [
+       {
+         "id": "unique-string-id",
+         "type": "info",           // "info" | "warning" | "success" | "danger"
+         "message": "Your announcement text here"
+       }
+     ]
+   }
+   
+   Announcements are dismissed per-user using
+   localStorage. Hidden IDs are stored and checked
+   on every fetch so dismissed ones don't reappear
+   within the same session.
+   =========================================== */
+
+/* Store fetched announcements to avoid re-fetching */
+let fetchedAnnouncements = [];
+
+/* Fetch announcements on page load (only if user is logged in) */
+function fetchAnnouncements() {
+    fetch(API_BASE + '/announcements')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            fetchedAnnouncements = data.announcements || [];
+            renderAnnouncements(fetchedAnnouncements);
+        })
+        .catch(function() {
+            /* Silently fail — no announcements is the normal state */
+            fetchedAnnouncements = [];
+            renderAnnouncements([]);
+        });
+}
+
+/* Render announcement bar from data */
+function renderAnnouncements(announcements) {
+    const bar = document.getElementById('announcementBar');
+    const textEl = document.getElementById('announcementText');
+    const iconEl = document.getElementById('announcementIcon');
+
+    /* Get dismissed IDs from localStorage */
+    const dismissed = JSON.parse(localStorage.getItem('nv_dismissed_announcements') || '[]');
+
+    /* Filter out dismissed announcements */
+    const active = announcements.filter(function(a) {
+        return !dismissed.includes(a.id);
+    });
+
+    if (active.length === 0) {
+        /* No active announcements — hide the bar */
+        bar.classList.remove('visible');
+        bar.classList.add('hidden');
+        return;
+    }
+
+    /* Show the first active announcement */
+    const latest = active[0];
+
+    textEl.textContent = latest.message;
+
+    /* Set type-based styling and icon */
+    bar.className = 'announcement-bar visible type-' + (latest.type || 'info');
+
+    switch (latest.type) {
+        case 'warning':
+            iconEl.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+            break;
+        case 'success':
+            iconEl.innerHTML = '<i class="fas fa-circle-check"></i>';
+            break;
+        case 'danger':
+            iconEl.innerHTML = '<i class="fas fa-circle-exclamation"></i>';
+            break;
+        default:
+            iconEl.innerHTML = '<i class="fas fa-bullhorn"></i>';
+            break;
+    }
+}
+
+/* Dismiss an announcement by its ID */
+function dismissAnnouncement(id) {
+    const bar = document.getElementById('announcementBar');
+
+    /* Animate out, then render next one */
+    bar.classList.add('dismissing');
+
+    setTimeout(function() {
+        /* Save dismissed ID to localStorage */
+        const dismissed = JSON.parse(localStorage.getItem('nv_dismissed_announcements') || '[]');
+        if (!dismissed.includes(id)) {
+            dismissed.push(id);
+            localStorage.setItem('nv_dismissed_announcements', JSON.stringify(dismissed));
+        }
+
+        /* Show the next active announcement, or hide bar if none left */
+        const remaining = fetchedAnnouncements.filter(function(a) {
+            return !dismissed.includes(a.id);
+        });
+
+        if (remaining.length === 0) {
+            bar.classList.remove('visible');
+            bar.classList.add('hidden');
+        } else {
+            renderAnnouncements(remaining);
+        }
+    }, 350);
+}
+
+/* Wire up the close button */
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('announcementClose');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            const active = fetchedAnnouncements.filter(function(a) {
+                const dismissed = JSON.parse(localStorage.getItem('nv_dismissed_announcements') || '[]');
+                return !dismissed.includes(a.id);
+            });
+            if (active.length > 0) {
+                dismissAnnouncement(active[0].id);
+            }
+        });
+    }
+});
+
+/* Call fetch inside your existing DOMContentLoaded */
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAnnouncements();
+});
