@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     init3DCardTilt();
     initStatsScrollAnimation();
     fetchUserAnnouncements();   // ← ADD THIS LINE
+   initGoogleAuth();
 });
 
 /* ===========================================
@@ -453,7 +454,9 @@ function initForm() {
             semester: document.getElementById('semester').value.trim(),
             facultyName: document.getElementById('facultyName').value.trim(),
             unitNumber: document.getElementById('unitNumber').value.trim(),
-            uploaderId: MY_UPLOADER_ID
+       uploaderId: currentUser.uid,
+uploaderEmail: currentUser.email,
+uploaderName: currentUser.name
         };
 
         if (uploadMode === 'file') {
