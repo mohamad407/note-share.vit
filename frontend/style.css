@@ -1542,3 +1542,324 @@ section { position: relative; z-index: 1; padding: 100px 0; }
         animation-duration: 0.01ms !important;
     }
 }
+/* ============================================
+   LOGIN OVERLAY
+   Full-screen login shown before dashboard.
+   ============================================ */
+
+/* Hidden utility — used by JS to toggle */
+.hidden {
+    display: none !important;
+}
+
+/* The overlay itself: fixed, covers everything */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+}
+
+.login-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Inner layout: nav at top, card centered, footer at bottom */
+.login-overlay-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Navbar inside login overlay */
+.login-overlay-nav {
+    position: relative;
+    z-index: 10;
+    padding: 16px 0;
+    background: rgba(6, 11, 26, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.nav-badge i {
+    color: var(--neon-blue);
+    font-size: 11px;
+}
+
+/* Center area */
+.login-overlay-inner > .login-card-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+/* Card wrapper — animation */
+.login-card-wrapper {
+    width: 100%;
+    max-width: 460px;
+    animation: loginCardEnter 0.7s var(--transition-spring) 0.3s both;
+}
+
+@keyframes loginCardEnter {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reuse your animated gradient border */
+.login-card-wrapper .form-glow-border {
+    padding: 2px;
+}
+
+/* Card body — same glassmorphism as upload form */
+.login-card {
+    background: rgba(10, 14, 39, 0.92);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: calc(var(--radius-xl) - 2px);
+    padding: 48px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 250px;
+    height: 160px;
+    background: radial-gradient(ellipse, rgba(0, 212, 255, 0.08), transparent 70%);
+    pointer-events: none;
+}
+
+.login-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Shield icon */
+.login-icon-wrap {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    margin: 0 auto 28px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(123, 47, 247, 0.08));
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: var(--neon-blue);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.1);
+    animation: loginIconPulse 3s ease-in-out infinite;
+}
+
+@keyframes loginIconPulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.1); }
+    50% { box-shadow: 0 0 60px rgba(0, 212, 255, 0.18); }
+}
+
+/* Title */
+.login-title {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+/* Description */
+.login-desc {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Google Sign In button */
+.google-signin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.google-signin-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 47, 247, 0.06));
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.google-signin-btn:hover {
+    border-color: rgba(0, 212, 255, 0.35);
+    background: rgba(0, 212, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);
+}
+
+.google-signin-btn:hover::before {
+    opacity: 1;
+}
+
+.google-signin-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 12px rgba(0, 212, 255, 0.1);
+}
+
+.google-signin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.google-signin-btn:focus-visible {
+    outline: 2px solid var(--neon-blue);
+    outline-offset: 3px;
+}
+
+.google-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Domain hint */
+.login-domain-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 22px;
+    padding: 9px 18px;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--neon-blue);
+    font-weight: 500;
+}
+
+.login-domain-hint i {
+    font-size: 11px;
+}
+
+/* Features row */
+.login-features {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.login-feature {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.login-feature i {
+    font-size: 11px;
+    color: var(--neon-green);
+}
+
+/* Footer inside login overlay */
+.login-overlay-footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 20px 24px 28px;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+/* Dashboard content wrapper */
+.dashboard-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+    .login-card {
+        padding: 36px 24px;
+    }
+    .login-title {
+        font-size: 24px;
+    }
+    .login-desc {
+        font-size: 14px;
+    }
+    .google-signin-btn {
+        padding: 14px 20px;
+        font-size: 14.5px;
+    }
+    .login-features {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .nav-badge {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-card-wrapper {
+        animation-duration: 0.01ms !important;
+    }
+    .login-icon-wrap {
+        animation: none !important;
+    }
+    .login-overlay {
+        transition-duration: 0.01ms !important;
+    }
+}
