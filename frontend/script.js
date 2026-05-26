@@ -957,4 +957,11 @@ function getTimeAgo(dateString) {
     const d = Math.floor(h / 24);
     return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
 }
+const provider = new firebase.auth.GoogleAuthProvider();
+
+document.getElementById("googleLoginBtn").addEventListener("click", async () => {
+
+    await firebase.auth().signInWithRedirect(provider);
+
+});
 
