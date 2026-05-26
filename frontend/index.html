@@ -16,7 +16,7 @@
     <!-- AOS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 
-    <!-- Firebase CDN (classic compat syntax) -->
+    <!-- Firebase CDN -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
@@ -40,141 +40,13 @@
         <span class="auth-loading-text" id="authLoadingText">Signing you in...</span>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal-card">
-            <div class="modal-icon-wrap">
-                <i class="fas fa-trash-can"></i>
-            </div>
-            <h3 class="modal-title">Delete this note?</h3>
-            <p class="modal-desc">This action cannot be undone. The note will be permanently removed.</p>
-            <div class="modal-note-preview" id="modalNotePreview"></div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
-                <button class="btn btn-danger" id="modalConfirm">
-                    <i class="fas fa-trash-can"></i> Delete
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== NAVBAR ==================== -->
-    <nav id="navbar">
-        <div class="nav-container">
-            <a href="#" class="nav-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-vault"></i>
-                </div>
-                <span class="logo-text">NoteVault</span>
-            </a>
-
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#hero" class="nav-link active">Home</a></li>
-                <li><a href="#upload" class="nav-link">Upload</a></li>
-                <li><a href="#search" class="nav-link">Search</a></li>
-                <li><a href="#notes" class="nav-link">Notes</a></li>
-                <li><a href="#stats" class="nav-link">Stats</a></li>
-            </ul>
-
-            <div class="nav-actions">
-
-                <!-- Desktop Sign In Button -->
-                <button class="auth-login-btn" id="authLoginBtn" onclick="handleLoginClick()" aria-label="Sign in with Google">
-                    <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    <span>Sign In</span>
-                </button>
-
-                <!-- Desktop Profile Dropdown -->
-                <div class="auth-profile" id="authProfile">
-                    <button class="auth-profile-trigger" id="authProfileTrigger" aria-label="User menu" aria-expanded="false">
-                        <img class="auth-avatar" id="authAvatar" src="" alt="User avatar">
-                        <span class="auth-trigger-name" id="authTriggerName"></span>
-                        <i class="fas fa-chevron-down auth-chevron"></i>
-                    </button>
-                    <div class="auth-dropdown" id="authDropdown" role="menu">
-                        <div class="auth-dropdown-header">
-                            <img class="auth-dropdown-avatar" id="authDropdownAvatar" src="" alt="User photo">
-                            <div class="auth-dropdown-info">
-                                <span class="auth-dropdown-name" id="authDropdownName"></span>
-                                <span class="auth-dropdown-email" id="authDropdownEmail"></span>
-                            </div>
-                        </div>
-                        <div class="auth-dropdown-success">
-                            <i class="fas fa-circle-check"></i>
-                            <span>Logged In Successfully</span>
-                        </div>
-                        <div class="auth-dropdown-divider"></div>
-                        <button class="auth-dropdown-logout" onclick="handleLogout()" role="menuitem">
-                            <i class="fas fa-right-from-bracket"></i>
-                            <span>Sign Out</span>
-                        </button>
-                    </div>
-                </div>
-
-                <a href="#upload" class="nav-cta-btn" id="navUploadBtn">
-                    <i class="fas fa-cloud-arrow-up"></i>
-                    <span>Upload</span>
-                </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-        </div>
-
-        <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
-        <div class="mobile-nav" id="mobileNav">
-            <ul class="mobile-nav-links">
-                <li><a href="#hero" class="mobile-nav-link">Home</a></li>
-                <li><a href="#upload" class="mobile-nav-link">Upload</a></li>
-                <li><a href="#search" class="mobile-nav-link">Search</a></li>
-                <li><a href="#notes" class="mobile-nav-link">Notes</a></li>
-                <li><a href="#stats" class="mobile-nav-link">Stats</a></li>
-            </ul>
-
-            <!-- Mobile Nav Auth Area -->
-            <div class="mobile-nav-auth" id="mobileNavAuth">
-                <button class="auth-login-btn auth-login-btn--mobile" id="authLoginBtnMobile" onclick="handleLoginClick()">
-                    <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    <span>Sign In with Google</span>
-                </button>
-                <div class="auth-mobile-profile" id="authMobileProfile">
-                    <img class="auth-mobile-avatar" id="authMobileAvatar" src="" alt="User avatar">
-                    <span class="auth-mobile-name" id="authMobileName"></span>
-                    <span class="auth-mobile-email" id="authMobileEmail"></span>
-                    <div class="auth-mobile-success">
-                        <i class="fas fa-circle-check"></i> Logged In Successfully
-                    </div>
-                    <button class="auth-mobile-logout" onclick="handleLogout()">
-                        <i class="fas fa-right-from-bracket"></i> Sign Out
-                    </button>
-                </div>
-            </div>
-
-            <a href="#upload" class="mobile-nav-cta">
-                <i class="fas fa-cloud-arrow-up"></i> Upload Notes
-            </a>
-        </div>
-    </nav>
-
-    <!-- ==================== HERO SECTION ==================== -->
-    <section id="hero">
+    <!-- ==================== LOGIN OVERLAY ==================== -->
+    <!-- Shown when NOT logged in. Hides everything behind it. -->
+    <div class="login-overlay" id="loginOverlay">
         <div class="hero-bg-glow hero-glow-1"></div>
         <div class="hero-bg-glow hero-glow-2"></div>
         <div class="hero-bg-glow hero-glow-3"></div>
-
-        <div class="floating-shapes" id="floatingShapes">
+        <div class="floating-shapes">
             <div class="floating-shape shape-ring shape-1"></div>
             <div class="floating-shape shape-diamond shape-2"></div>
             <div class="floating-shape shape-dot shape-3"></div>
@@ -185,349 +57,275 @@
             <div class="floating-shape shape-cross shape-8"></div>
         </div>
 
-        <div class="hero-container">
-            <div class="hero-badge" id="heroBadge" style="opacity:0;">
-                <i class="fas fa-sparkles"></i>
-                <span>Open Source Notes Platform</span>
-            </div>
-            <h1 class="hero-title" id="heroTitle" style="opacity:0;">
-                <span class="hero-title-line">Your College Notes,</span>
-                <span class="hero-title-line hero-typed-wrapper">
-                    <span id="typedText"></span><span class="typed-cursor">|</span>
-                </span>
-            </h1>
-            <p class="hero-subtitle" id="heroSubtitle" style="opacity:0;">
-                Upload, search, and share study notes with your peers.
-                No boundaries, no predefined subjects — share anything you're studying.
-            </p>
-            <div class="hero-actions" id="heroActions" style="opacity:0;">
-                <a href="#upload" class="btn btn-primary btn-ripple btn-magnetic">
-                    <i class="fas fa-cloud-arrow-up"></i>
-                    Upload Notes
-                </a>
-                <a href="#notes" class="btn btn-secondary btn-ripple btn-magnetic">
-                    <i class="fas fa-magnifying-glass"></i>
-                    Browse Notes
-                </a>
-            </div>
-            <div class="hero-stats-mini" id="heroStats" style="opacity:0;">
-                <div class="hero-stat-mini">
-                    <span class="hero-stat-number" id="heroStatNotes">0</span>
-                    <span class="hero-stat-label">Notes Shared</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat-mini">
-                    <span class="hero-stat-number" id="heroStatDepts">0</span>
-                    <span class="hero-stat-label">Departments</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat-mini">
-                    <span class="hero-stat-number" id="heroStatCourses">0</span>
-                    <span class="hero-stat-label">Courses</span>
-                </div>
-            </div>
-        </div>
-        <div class="hero-scroll-indicator" id="heroScroll" style="opacity:0;">
-            <div class="scroll-mouse">
-                <div class="scroll-wheel"></div>
-            </div>
-            <span>Scroll to explore</span>
-        </div>
-    </section>
-
-    <!-- ==================== UPLOAD SECTION ==================== -->
-    <section id="upload">
-        <div class="section-container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-tag"><i class="fas fa-cloud-arrow-up"></i> Share Knowledge</span>
-                <h2 class="section-title">Upload Your Notes</h2>
-                <p class="section-subtitle">Help your peers by sharing your study material. Fill in the details below.</p>
-            </div>
-
-            <div class="upload-form-wrapper" data-aos="fade-up" data-aos-delay="200">
-                <div class="form-glow-border">
-                    <form id="uploadForm" class="upload-form" novalidate>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="courseCode">
-                                    <i class="fas fa-hashtag"></i> Course Code
-                                </label>
-                                <input type="text" id="courseCode" name="courseCode" placeholder="e.g. CS201" required autocomplete="off">
-                                <span class="form-error" id="courseCodeError"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="courseName">
-                                    <i class="fas fa-book"></i> Course Name
-                                </label>
-                                <input type="text" id="courseName" name="courseName" placeholder="e.g. Data Structures" required autocomplete="off">
-                                <span class="form-error" id="courseNameError"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="department">
-                                    <i class="fas fa-building-columns"></i> Department
-                                </label>
-                                <input type="text" id="department" name="department" placeholder="e.g. Computer Science" required autocomplete="off">
-                                <span class="form-error" id="departmentError"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="semester">
-                                    <i class="fas fa-layer-group"></i> Semester
-                                </label>
-                                <input type="text" id="semester" name="semester" placeholder="e.g. 3rd Semester" required autocomplete="off">
-                                <span class="form-error" id="semesterError"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="facultyName">
-                                    <i class="fas fa-chalkboard-user"></i> Faculty Name
-                                </label>
-                                <input type="text" id="facultyName" name="facultyName" placeholder="e.g. Dr. Smith" required autocomplete="off">
-                                <span class="form-error" id="facultyNameError"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="unitNumber">
-                                    <i class="fas fa-list-ol"></i> Unit Number
-                                </label>
-                                <input type="text" id="unitNumber" name="unitNumber" placeholder="e.g. Unit 1" required autocomplete="off">
-                                <span class="form-error" id="unitNumberError"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-row form-row-full">
-                            <div class="form-group">
-                                <label>
-                                    <i class="fas fa-file-pdf"></i> PDF File
-                                </label>
-                                <div class="upload-mode-toggle">
-                                    <button type="button" class="mode-btn active" data-mode="file" id="modeFileBtn">
-                                        <i class="fas fa-upload"></i> Upload File
-                                    </button>
-                                    <button type="button" class="mode-btn" data-mode="url" id="modeUrlBtn">
-                                        <i class="fas fa-link"></i> Paste URL
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row form-row-full" id="fileZoneRow">
-                            <div class="form-group">
-                                <div class="file-drop-zone" id="fileDropZone">
-                                    <div class="file-zone-inner">
-                                        <div class="file-zone-icon">
-                                            <i class="fas fa-cloud-arrow-up"></i>
-                                        </div>
-                                        <p class="file-zone-title">Drag & drop your PDF here</p>
-                                        <p class="file-zone-subtitle">or <span class="file-zone-browse">browse files</span></p>
-                                        <div class="file-zone-badges">
-                                            <span class="file-zone-badge"><i class="fas fa-file-pdf"></i> PDF only</span>
-                                            <span class="file-zone-badge"><i class="fas fa-weight-hanging"></i> Max 50MB</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
-                                </div>
-
-                                <div class="file-preview" id="filePreview">
-                                    <div class="file-preview-icon-wrap">
-                                        <i class="fas fa-file-pdf"></i>
-                                    </div>
-                                    <div class="file-preview-info">
-                                        <span class="file-preview-name" id="fileName"></span>
-                                        <span class="file-preview-size" id="fileSize"></span>
-                                    </div>
-                                    <div class="file-preview-check">
-                                        <i class="fas fa-circle-check"></i>
-                                    </div>
-                                    <button type="button" class="file-remove-btn" id="fileRemove" aria-label="Remove file">
-                                        <i class="fas fa-xmark"></i>
-                                    </button>
-                                </div>
-                                <span class="form-error" id="fileError"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-row form-row-full" id="urlZoneRow" style="display:none;">
-                            <div class="form-group">
-                                <label for="pdfUrl">
-                                    <i class="fas fa-link"></i> PDF URL
-                                </label>
-                                <input type="url" id="pdfUrl" name="pdfUrl" placeholder="https://drive.google.com/..." autocomplete="off">
-                                <span class="form-hint">Paste a link to your PDF (Google Drive, OneDrive, etc.)</span>
-                                <span class="form-error" id="pdfUrlError"></span>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-submit btn-ripple" id="submitBtn">
-                            <span class="btn-text">
-                                <i class="fas fa-paper-plane"></i> Upload Notes
-                            </span>
-                            <span class="btn-loading" style="display:none;">
-                                <i class="fas fa-spinner fa-spin"></i> Uploading...
-                            </span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ==================== SEARCH SECTION ==================== -->
-    <section id="search">
-        <div class="section-container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-tag"><i class="fas fa-magnifying-glass"></i> Find Fast</span>
-                <h2 class="section-title">Search Notes</h2>
-                <p class="section-subtitle">Search by course code, course name, or department — instantly.</p>
-            </div>
-
-            <div class="search-wrapper" data-aos="fade-up" data-aos-delay="200">
-                <div class="search-box">
-                    <i class="fas fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Type course code, name, or department..." autocomplete="off">
-                    <button class="search-clear-btn" id="searchClear" style="display:none;" aria-label="Clear search">
-                        <i class="fas fa-xmark"></i>
-                    </button>
-                    <div class="search-pulse" id="searchPulse"></div>
-                </div>
-                <div class="search-tags" id="searchTags">
-                    <span class="search-tag-hint">Quick filters will appear here after you upload notes</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ==================== RECENT UPLOADS SECTION ==================== -->
-    <section id="recent">
-        <div class="section-container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-tag"><i class="fas fa-clock-rotate-left"></i> Latest</span>
-                <h2 class="section-title">Recent Uploads</h2>
-                <p class="section-subtitle">See what's been shared most recently by the community.</p>
-            </div>
-            <div class="recent-grid" id="recentGrid" data-aos="fade-up" data-aos-delay="200"></div>
-        </div>
-    </section>
-
-    <!-- ==================== NOTES GRID SECTION ==================== -->
-    <section id="notes">
-        <div class="section-container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-tag"><i class="fas fa-grid-2"></i> All Notes</span>
-                <h2 class="section-title">Notes Library</h2>
-                <p class="section-subtitle" id="notesSubtitle">Browse all uploaded notes from every department.</p>
-            </div>
-            <div class="notes-grid" id="notesGrid" data-aos="fade-up" data-aos-delay="200"></div>
-        </div>
-    </section>
-
-    <!-- ==================== STATISTICS SECTION ==================== -->
-    <section id="stats">
-        <div class="section-container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-tag"><i class="fas fa-chart-line"></i> Insights</span>
-                <h2 class="section-title">Platform Statistics</h2>
-                <p class="section-subtitle">Real-time stats powered by community contributions.</p>
-            </div>
-            <div class="stats-grid" id="statsGrid" data-aos="fade-up" data-aos-delay="200">
-                <div class="stat-card">
-                    <div class="stat-icon-wrap stat-icon-blue"><i class="fas fa-file-lines"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-number" id="statTotalNotes">0</span>
-                        <span class="stat-label">Total Notes</span>
-                    </div>
-                    <div class="stat-bg-icon"><i class="fas fa-file-lines"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrap stat-icon-purple"><i class="fas fa-building-columns"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-number" id="statTotalDepts">0</span>
-                        <span class="stat-label">Departments</span>
-                    </div>
-                    <div class="stat-bg-icon"><i class="fas fa-building-columns"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrap stat-icon-green"><i class="fas fa-book-open"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-number" id="statTotalCourses">0</span>
-                        <span class="stat-label">Unique Courses</span>
-                    </div>
-                    <div class="stat-bg-icon"><i class="fas fa-book-open"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon-wrap stat-icon-orange"><i class="fas fa-layer-group"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-number" id="statTotalSemesters">0</span>
-                        <span class="stat-label">Semesters</span>
-                    </div>
-                    <div class="stat-bg-icon"><i class="fas fa-layer-group"></i></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ==================== FOOTER ==================== -->
-    <footer id="footer">
-        <div class="footer-container">
-            <div class="footer-top">
-                <div class="footer-brand">
-                    <a href="#" class="footer-logo">
+        <div class="login-overlay-inner">
+            <!-- Navbar inside login -->
+            <nav class="login-overlay-nav">
+                <div class="nav-container">
+                    <a href="#" class="nav-logo">
                         <div class="logo-icon"><i class="fas fa-vault"></i></div>
                         <span class="logo-text">NoteVault</span>
                     </a>
-                    <p class="footer-desc">
-                        The open platform for college students to share and discover study notes. Built by students, for students.
-                    </p>
+                    <div class="nav-badge">
+                        <i class="fas fa-shield-halved"></i>
+                        Secure Login
+                    </div>
                 </div>
-                <div class="footer-links-group">
-                    <h4>Platform</h4>
-                    <ul>
-                        <li><a href="#upload">Upload Notes</a></li>
-                        <li><a href="#search">Search Notes</a></li>
-                        <li><a href="#notes">Browse All</a></li>
-                        <li><a href="#stats">Statistics</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links-group">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#hero">Getting Started</a></li>
-                        <li><a href="#upload">How to Upload</a></li>
-                        <li><a href="#search">Search Tips</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links-group">
-                    <h4>Connect</h4>
-                    <div class="footer-socials">
-                        <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
-                        <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-link" aria-label="Discord"><i class="fab fa-discord"></i></a>
+            </nav>
+
+            <!-- Login Card -->
+            <div class="login-card-wrapper">
+                <div class="form-glow-border">
+                    <div class="login-card">
+                        <div class="login-icon-wrap">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <h1 class="login-title">Welcome to NoteVault</h1>
+                        <p class="login-desc">
+                            Your secure, personal note-taking space.
+                            Sign in with your VIT student account to get started.
+                        </p>
+                        <button class="google-signin-btn" id="googleSignInBtn" aria-label="Sign in with Google">
+                            <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Sign in with Google
+                        </button>
+                        <div class="login-domain-hint">
+                            <i class="fas fa-lock"></i>
+                            Only @vitstudent.ac.in accounts allowed
+                        </div>
+                        <div class="login-features">
+                            <div class="login-feature"><i class="fas fa-circle-check"></i> End-to-end encrypted</div>
+                            <div class="login-feature"><i class="fas fa-circle-check"></i> VIT students only</div>
+                            <div class="login-feature"><i class="fas fa-circle-check"></i> Free forever</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 NoteVault. All rights reserved.</p>
-                <p>Built with <i class="fas fa-heart" style="color:#ff4d6d;"></i> for students everywhere</p>
+
+            <!-- Footer inside login -->
+            <div class="login-overlay-footer">
+                Built with <i class="fas fa-heart" style="color:#ff4d6d;"></i> for VIT students — Your notes, your privacy.
             </div>
         </div>
-    </footer>
+    </div>
+    <!-- ==================== END LOGIN OVERLAY ==================== -->
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-card">
+            <div class="modal-icon-wrap"><i class="fas fa-trash-can"></i></div>
+            <h3 class="modal-title">Delete this note?</h3>
+            <p class="modal-desc">This action cannot be undone. The note will be permanently removed.</p>
+            <div class="modal-note-preview" id="modalNotePreview"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn-danger" id="modalConfirm"><i class="fas fa-trash-can"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DASHBOARD (hidden until login) ==================== -->
+    <div class="dashboard-content" id="dashboardContent">
+
+        <!-- NAVBAR -->
+        <nav id="navbar">
+            <div class="nav-container">
+                <a href="#" class="nav-logo">
+                    <div class="logo-icon"><i class="fas fa-vault"></i></div>
+                    <span class="logo-text">NoteVault</span>
+                </a>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#hero" class="nav-link active">Home</a></li>
+                    <li><a href="#upload" class="nav-link">Upload</a></li>
+                    <li><a href="#search" class="nav-link">Search</a></li>
+                    <li><a href="#notes" class="nav-link">Notes</a></li>
+                    <li><a href="#stats" class="nav-link">Stats</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <button class="auth-login-btn" id="authLoginBtn" onclick="handleLoginClick()" aria-label="Sign in with Google">
+                        <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span>Sign In</span>
+                    </button>
+                    <div class="auth-profile" id="authProfile">
+                        <button class="auth-profile-trigger" id="authProfileTrigger" aria-label="User menu" aria-expanded="false">
+                            <img class="auth-avatar" id="authAvatar" src="" alt="User avatar">
+                            <span class="auth-trigger-name" id="authTriggerName"></span>
+                            <i class="fas fa-chevron-down auth-chevron"></i>
+                        </button>
+                        <div class="auth-dropdown" id="authDropdown" role="menu">
+                            <div class="auth-dropdown-header">
+                                <img class="auth-dropdown-avatar" id="authDropdownAvatar" src="" alt="User photo">
+                                <div class="auth-dropdown-info">
+                                    <span class="auth-dropdown-name" id="authDropdownName"></span>
+                                    <span class="auth-dropdown-email" id="authDropdownEmail"></span>
+                                </div>
+                            </div>
+                            <div class="auth-dropdown-success"><i class="fas fa-circle-check"></i><span>Logged In Successfully</span></div>
+                            <div class="auth-dropdown-divider"></div>
+                            <button class="auth-dropdown-logout" onclick="handleLogout()" role="menuitem"><i class="fas fa-right-from-bracket"></i><span>Sign Out</span></button>
+                        </div>
+                    </div>
+                    <a href="#upload" class="nav-cta-btn" id="navUploadBtn"><i class="fas fa-cloud-arrow-up"></i><span>Upload</span></a>
+                    <button class="hamburger" id="hamburger" aria-label="Toggle Menu"><span></span><span></span><span></span></button>
+                </div>
+            </div>
+            <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+            <div class="mobile-nav" id="mobileNav">
+                <ul class="mobile-nav-links">
+                    <li><a href="#hero" class="mobile-nav-link">Home</a></li>
+                    <li><a href="#upload" class="mobile-nav-link">Upload</a></li>
+                    <li><a href="#search" class="mobile-nav-link">Search</a></li>
+                    <li><a href="#notes" class="mobile-nav-link">Notes</a></li>
+                    <li><a href="#stats" class="mobile-nav-link">Stats</a></li>
+                </ul>
+                <div class="mobile-nav-auth" id="mobileNavAuth">
+                    <button class="auth-login-btn auth-login-btn--mobile" id="authLoginBtnMobile" onclick="handleLoginClick()">
+                        <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span>Sign In with Google</span>
+                    </button>
+                    <div class="auth-mobile-profile" id="authMobileProfile">
+                        <img class="auth-mobile-avatar" id="authMobileAvatar" src="" alt="User avatar">
+                        <span class="auth-mobile-name" id="authMobileName"></span>
+                        <span class="auth-mobile-email" id="authMobileEmail"></span>
+                        <div class="auth-mobile-success"><i class="fas fa-circle-check"></i> Logged In Successfully</div>
+                        <button class="auth-mobile-logout" onclick="handleLogout()"><i class="fas fa-right-from-bracket"></i> Sign Out</button>
+                    </div>
+                </div>
+                <a href="#upload" class="mobile-nav-cta"><i class="fas fa-cloud-arrow-up"></i> Upload Notes</a>
+            </div>
+        </nav>
+
+        <!-- HERO -->
+        <section id="hero">
+            <div class="hero-bg-glow hero-glow-1"></div>
+            <div class="hero-bg-glow hero-glow-2"></div>
+            <div class="hero-bg-glow hero-glow-3"></div>
+            <div class="floating-shapes" id="floatingShapes">
+                <div class="floating-shape shape-ring shape-1"></div>
+                <div class="floating-shape shape-diamond shape-2"></div>
+                <div class="floating-shape shape-dot shape-3"></div>
+                <div class="floating-shape shape-ring shape-4"></div>
+                <div class="floating-shape shape-diamond shape-5"></div>
+                <div class="floating-shape shape-dot shape-6"></div>
+                <div class="floating-shape shape-cross shape-7"></div>
+                <div class="floating-shape shape-cross shape-8"></div>
+            </div>
+            <div class="hero-container">
+                <div class="hero-badge" id="heroBadge" style="opacity:0;"><i class="fas fa-sparkles"></i><span>Open Source Notes Platform</span></div>
+                <h1 class="hero-title" id="heroTitle" style="opacity:0;">
+                    <span class="hero-title-line">Your College Notes,</span>
+                    <span class="hero-title-line hero-typed-wrapper"><span id="typedText"></span><span class="typed-cursor">|</span></span>
+                </h1>
+                <p class="hero-subtitle" id="heroSubtitle" style="opacity:0;">Upload, search, and share study notes with your peers. No boundaries, no predefined subjects — share anything you're studying.</p>
+                <div class="hero-actions" id="heroActions" style="opacity:0;">
+                    <a href="#upload" class="btn btn-primary btn-ripple btn-magnetic"><i class="fas fa-cloud-arrow-up"></i> Upload Notes</a>
+                    <a href="#notes" class="btn btn-secondary btn-ripple btn-magnetic"><i class="fas fa-magnifying-glass"></i> Browse Notes</a>
+                </div>
+                <div class="hero-stats-mini" id="heroStats" style="opacity:0;">
+                    <div class="hero-stat-mini"><span class="hero-stat-number" id="heroStatNotes">0</span><span class="hero-stat-label">Notes Shared</span></div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat-mini"><span class="hero-stat-number" id="heroStatDepts">0</span><span class="hero-stat-label">Departments</span></div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat-mini"><span class="hero-stat-number" id="heroStatCourses">0</span><span class="hero-stat-label">Courses</span></div>
+                </div>
+            </div>
+            <div class="hero-scroll-indicator" id="heroScroll" style="opacity:0;"><div class="scroll-mouse"><div class="scroll-wheel"></div></div><span>Scroll to explore</span></div>
+        </section>
+
+        <!-- UPLOAD -->
+        <section id="upload">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up"><span class="section-tag"><i class="fas fa-cloud-arrow-up"></i> Share Knowledge</span><h2 class="section-title">Upload Your Notes</h2><p class="section-subtitle">Help your peers by sharing your study material. Fill in the details below.</p></div>
+                <div class="upload-form-wrapper" data-aos="fade-up" data-aos-delay="200">
+                    <div class="form-glow-border">
+                        <form id="uploadForm" class="upload-form" novalidate>
+                            <div class="form-row"><div class="form-group"><label for="courseCode"><i class="fas fa-hashtag"></i> Course Code</label><input type="text" id="courseCode" name="courseCode" placeholder="e.g. CS201" required autocomplete="off"><span class="form-error" id="courseCodeError"></span></div><div class="form-group"><label for="courseName"><i class="fas fa-book"></i> Course Name</label><input type="text" id="courseName" name="courseName" placeholder="e.g. Data Structures" required autocomplete="off"><span class="form-error" id="courseNameError"></span></div></div>
+                            <div class="form-row"><div class="form-group"><label for="department"><i class="fas fa-building-columns"></i> Department</label><input type="text" id="department" name="department" placeholder="e.g. Computer Science" required autocomplete="off"><span class="form-error" id="departmentError"></span></div><div class="form-group"><label for="semester"><i class="fas fa-layer-group"></i> Semester</label><input type="text" id="semester" name="semester" placeholder="e.g. 3rd Semester" required autocomplete="off"><span class="form-error" id="semesterError"></span></div></div>
+                            <div class="form-row"><div class="form-group"><label for="facultyName"><i class="fas fa-chalkboard-user"></i> Faculty Name</label><input type="text" id="facultyName" name="facultyName" placeholder="e.g. Dr. Smith" required autocomplete="off"><span class="form-error" id="facultyNameError"></span></div><div class="form-group"><label for="unitNumber"><i class="fas fa-list-ol"></i> Unit Number</label><input type="text" id="unitNumber" name="unitNumber" placeholder="e.g. Unit 1" required autocomplete="off"><span class="form-error" id="unitNumberError"></span></div></div>
+                            <div class="form-row form-row-full"><div class="form-group"><label><i class="fas fa-file-pdf"></i> PDF File</label><div class="upload-mode-toggle"><button type="button" class="mode-btn active" data-mode="file" id="modeFileBtn"><i class="fas fa-upload"></i> Upload File</button><button type="button" class="mode-btn" data-mode="url" id="modeUrlBtn"><i class="fas fa-link"></i> Paste URL</button></div></div></div>
+                            <div class="form-row form-row-full" id="fileZoneRow"><div class="form-group"><div class="file-drop-zone" id="fileDropZone"><div class="file-zone-inner"><div class="file-zone-icon"><i class="fas fa-cloud-arrow-up"></i></div><p class="file-zone-title">Drag & drop your PDF here</p><p class="file-zone-subtitle">or <span class="file-zone-browse">browse files</span></p><div class="file-zone-badges"><span class="file-zone-badge"><i class="fas fa-file-pdf"></i> PDF only</span><span class="file-zone-badge"><i class="fas fa-weight-hanging"></i> Max 50MB</span></div></div><input type="file" id="fileInput" accept=".pdf,application/pdf" hidden></div><div class="file-preview" id="filePreview"><div class="file-preview-icon-wrap"><i class="fas fa-file-pdf"></i></div><div class="file-preview-info"><span class="file-preview-name" id="fileName"></span><span class="file-preview-size" id="fileSize"></span></div><div class="file-preview-check"><i class="fas fa-circle-check"></i></div><button type="button" class="file-remove-btn" id="fileRemove" aria-label="Remove file"><i class="fas fa-xmark"></i></button></div><span class="form-error" id="fileError"></span></div></div>
+                            <div class="form-row form-row-full" id="urlZoneRow" style="display:none;"><div class="form-group"><label for="pdfUrl"><i class="fas fa-link"></i> PDF URL</label><input type="url" id="pdfUrl" name="pdfUrl" placeholder="https://drive.google.com/..." autocomplete="off"><span class="form-hint">Paste a link to your PDF (Google Drive, OneDrive, etc.)</span><span class="form-error" id="pdfUrlError"></span></div></div>
+                            <button type="submit" class="btn btn-primary btn-submit btn-ripple" id="submitBtn"><span class="btn-text"><i class="fas fa-paper-plane"></i> Upload Notes</span><span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Uploading...</span></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEARCH -->
+        <section id="search">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up"><span class="section-tag"><i class="fas fa-magnifying-glass"></i> Find Fast</span><h2 class="section-title">Search Notes</h2><p class="section-subtitle">Search by course code, course name, or department — instantly.</p></div>
+                <div class="search-wrapper" data-aos="fade-up" data-aos-delay="200"><div class="search-box"><i class="fas fa-magnifying-glass search-icon"></i><input type="text" id="searchInput" placeholder="Type course code, name, or department..." autocomplete="off"><button class="search-clear-btn" id="searchClear" style="display:none;" aria-label="Clear search"><i class="fas fa-xmark"></i></button><div class="search-pulse" id="searchPulse"></div></div><div class="search-tags" id="searchTags"><span class="search-tag-hint">Quick filters will appear here after you upload notes</span></div></div>
+            </div>
+        </section>
+
+        <!-- RECENT -->
+        <section id="recent">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up"><span class="section-tag"><i class="fas fa-clock-rotate-left"></i> Latest</span><h2 class="section-title">Recent Uploads</h2><p class="section-subtitle">See what's been shared most recently by the community.</p></div>
+                <div class="recent-grid" id="recentGrid" data-aos="fade-up" data-aos-delay="200"></div>
+            </div>
+        </section>
+
+        <!-- NOTES -->
+        <section id="notes">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up"><span class="section-tag"><i class="fas fa-grid-2"></i> All Notes</span><h2 class="section-title">Notes Library</h2><p class="section-subtitle" id="notesSubtitle">Browse all uploaded notes from every department.</p></div>
+                <div class="notes-grid" id="notesGrid" data-aos="fade-up" data-aos-delay="200"></div>
+            </div>
+        </section>
+
+        <!-- STATS -->
+        <section id="stats">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up"><span class="section-tag"><i class="fas fa-chart-line"></i> Insights</span><h2 class="section-title">Platform Statistics</h2><p class="section-subtitle">Real-time stats powered by community contributions.</p></div>
+                <div class="stats-grid" id="statsGrid" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-card"><div class="stat-icon-wrap stat-icon-blue"><i class="fas fa-file-lines"></i></div><div class="stat-info"><span class="stat-number" id="statTotalNotes">0</span><span class="stat-label">Total Notes</span></div><div class="stat-bg-icon"><i class="fas fa-file-lines"></i></div></div>
+                    <div class="stat-card"><div class="stat-icon-wrap stat-icon-purple"><i class="fas fa-building-columns"></i></div><div class="stat-info"><span class="stat-number" id="statTotalDepts">0</span><span class="stat-label">Departments</span></div><div class="stat-bg-icon"><i class="fas fa-building-columns"></i></div></div>
+                    <div class="stat-card"><div class="stat-icon-wrap stat-icon-green"><i class="fas fa-book-open"></i></div><div class="stat-info"><span class="stat-number" id="statTotalCourses">0</span><span class="stat-label">Unique Courses</span></div><div class="stat-bg-icon"><i class="fas fa-book-open"></i></div></div>
+                    <div class="stat-card"><div class="stat-icon-wrap stat-icon-orange"><i class="fas fa-layer-group"></i></div><div class="stat-info"><span class="stat-number" id="statTotalSemesters">0</span><span class="stat-label">Semesters</span></div><div class="stat-bg-icon"><i class="fas fa-layer-group"></i></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer id="footer">
+            <div class="footer-container">
+                <div class="footer-top">
+                    <div class="footer-brand"><a href="#" class="footer-logo"><div class="logo-icon"><i class="fas fa-vault"></i></div><span class="logo-text">NoteVault</span></a><p class="footer-desc">The open platform for college students to share and discover study notes. Built by students, for students.</p></div>
+                    <div class="footer-links-group"><h4>Platform</h4><ul><li><a href="#upload">Upload Notes</a></li><li><a href="#search">Search Notes</a></li><li><a href="#notes">Browse All</a></li><li><a href="#stats">Statistics</a></li></ul></div>
+                    <div class="footer-links-group"><h4>Resources</h4><ul><li><a href="#hero">Getting Started</a></li><li><a href="#upload">How to Upload</a></li><li><a href="#search">Search Tips</a></li></ul></div>
+                    <div class="footer-links-group"><h4>Connect</h4><div class="footer-socials"><a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a><a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a><a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a><a href="#" class="social-link" aria-label="Discord"><i class="fab fa-discord"></i></a></div></div>
+                </div>
+                <div class="footer-bottom"><p>&copy; 2025 NoteVault. All rights reserved.</p><p>Built with <i class="fas fa-heart" style="color:#ff4d6d;"></i> for students everywhere</p></div>
+            </div>
+        </footer>
+
+    </div>
+    <!-- ==================== END DASHBOARD ==================== -->
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="script.js"></script>
 
-    <!-- Firebase Google Authentication Logic -->
+    <!-- Firebase Auth -->
     <script>
-    /* ===========================================================
-       FIREBASE GOOGLE AUTH — NoteVault
-       =========================================================== */
-
-    /* ---- Firebase Configuration ---- */
     const firebaseConfig = {
         apiKey: "AIzaSyD2jz8R-Ur7oX5lFtxroZ5Bs1xhO44-rdA",
         authDomain: "notevault-1f4bb.firebaseapp.com",
@@ -538,150 +336,138 @@
         measurementId: "G-484XPXQLN7"
     };
 
-    /* ---- Initialize Firebase App & Auth ---- */
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
-    /* ---- Allowed email domain ---- */
     const ALLOWED_DOMAIN = "@vitstudent.ac.in";
-
-    /* ---- Duplicate popup guard ---- */
     let isLoginInProgress = false;
-
-    /* ---- Dropdown state ---- */
     let isDropdownOpen = false;
 
-    /* ===========================================================
-       DOM REFERENCES
-       =========================================================== */
-    const authLoginBtn       = document.getElementById("authLoginBtn");
+    /* DOM */
+    const loginOverlay = document.getElementById("loginOverlay");
+    const dashboardContent = document.getElementById("dashboardContent");
+    const googleSignInBtn = document.getElementById("googleSignInBtn");
+    const authLoginBtn = document.getElementById("authLoginBtn");
     const authLoginBtnMobile = document.getElementById("authLoginBtnMobile");
-    const authProfile        = document.getElementById("authProfile");
+    const authProfile = document.getElementById("authProfile");
     const authProfileTrigger = document.getElementById("authProfileTrigger");
-    const authDropdown       = document.getElementById("authDropdown");
-    const authAvatar         = document.getElementById("authAvatar");
-    const authTriggerName    = document.getElementById("authTriggerName");
+    const authDropdown = document.getElementById("authDropdown");
+    const authAvatar = document.getElementById("authAvatar");
+    const authTriggerName = document.getElementById("authTriggerName");
     const authDropdownAvatar = document.getElementById("authDropdownAvatar");
-    const authDropdownName   = document.getElementById("authDropdownName");
-    const authDropdownEmail  = document.getElementById("authDropdownEmail");
+    const authDropdownName = document.getElementById("authDropdownName");
+    const authDropdownEmail = document.getElementById("authDropdownEmail");
     const authLoadingOverlay = document.getElementById("authLoadingOverlay");
-    const authLoadingText    = document.getElementById("authLoadingText");
-    const toastContainer     = document.getElementById("toastContainer");
-    const authMobileProfile  = document.getElementById("authMobileProfile");
-    const authMobileAvatar   = document.getElementById("authMobileAvatar");
-    const authMobileName     = document.getElementById("authMobileName");
-    const authMobileEmail    = document.getElementById("authMobileEmail");
+    const authLoadingText = document.getElementById("authLoadingText");
+    const toastContainer = document.getElementById("toastContainer");
+    const authMobileProfile = document.getElementById("authMobileProfile");
+    const authMobileAvatar = document.getElementById("authMobileAvatar");
+    const authMobileName = document.getElementById("authMobileName");
+    const authMobileEmail = document.getElementById("authMobileEmail");
 
-    /* ===========================================================
+    /* ===========================================
        initGoogleAuth()
-       Creates a GoogleAuthProvider with profile + email scopes
-       and prompt: "select_account" to prevent duplicate popups.
-    =========================================================== */
+       =========================================== */
     function initGoogleAuth() {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.addScope("profile");
         provider.addScope("email");
-        provider.setCustomParameters({
-            prompt: "select_account"
-        });
+        provider.setCustomParameters({ prompt: "select_account" });
         return provider;
     }
 
-    /* ===========================================================
+    /* ===========================================
        handleLoginClick()
-       Triggered by any Sign In button.
-       Guards against duplicate popups, shows loading overlay,
-       then calls firebase.auth().signInWithPopup(provider).
-    =========================================================== */
+       Called from dashboard nav buttons (fallback)
+       =========================================== */
     function handleLoginClick() {
         if (isLoginInProgress) {
             authShowToast("Please wait, sign-in is already in progress.", "warning");
             return;
         }
-
         isLoginInProgress = true;
         authShowLoading("Signing you in...");
         closeMobileNav();
 
         const provider = initGoogleAuth();
-
         auth.signInWithPopup(provider)
-            .then(function(result) {
-                authHideLoading();
-                isLoginInProgress = false;
-            })
+            .then(function() { authHideLoading(); isLoginInProgress = false; })
+            .catch(function(error) { authHideLoading(); isLoginInProgress = false; handleAuthError(error); });
+    }
+
+    /* ===========================================
+       handleLoginFromOverlay()
+       Called from the login overlay button
+       =========================================== */
+    function handleLoginFromOverlay() {
+        if (isLoginInProgress) {
+            authShowToast("Please wait...", "warning");
+            return;
+        }
+        isLoginInProgress = true;
+        authShowLoading("Signing you in...");
+        googleSignInBtn.disabled = true;
+
+        const provider = initGoogleAuth();
+        auth.signInWithPopup(provider)
+            .then(function() { authHideLoading(); })
             .catch(function(error) {
                 authHideLoading();
                 isLoginInProgress = false;
+                googleSignInBtn.disabled = false;
                 handleAuthError(error);
             });
     }
 
-    /* ===========================================================
+    googleSignInBtn.addEventListener("click", handleLoginFromOverlay);
+
+    /* ===========================================
        handleLogout()
-       Signs the user out. onAuthStateChanged resets the UI.
-    =========================================================== */
+       =========================================== */
     function handleLogout() {
         authShowLoading("Signing you out...");
         closeAuthDropdown();
-
         auth.signOut()
-            .then(function() {
-                authHideLoading();
-                authShowToast("You have been signed out.", "success");
-            })
-            .catch(function(error) {
-                authHideLoading();
-                authShowToast("Sign-out failed: " + error.message, "error");
-            });
+            .then(function() { authHideLoading(); authShowToast("You have been signed out.", "success"); })
+            .catch(function(error) { authHideLoading(); authShowToast("Sign-out failed: " + error.message, "error"); });
     }
 
-    /* ===========================================================
+    /* ===========================================
        checkLoginState()
-       Single source of truth. Uses
-       firebase.auth().onAuthStateChanged() which fires:
-       - On page load (checks existing session)
-       - On sign-in
-       - On sign-out
-       - On tab focus
-       No fake login state after refresh.
-    =========================================================== */
+       Single source of truth. Toggles between
+       login overlay and dashboard — no redirects.
+       =========================================== */
     function checkLoginState() {
         auth.onAuthStateChanged(function(user) {
             if (user) {
-                /* Enforce @vitstudent.ac.in restriction */
                 if (!user.email.toLowerCase().endsWith(ALLOWED_DOMAIN)) {
                     auth.signOut().then(function() {
-                        authShowToast(
-                            "Access denied. Only " + ALLOWED_DOMAIN + " accounts are allowed.",
-                            "error"
-                        );
+                        authShowToast("Access denied. Only " + ALLOWED_DOMAIN + " accounts are allowed.", "error");
                     });
                     return;
                 }
-
                 var userData = {
                     displayName: user.displayName || "VIT Student",
                     email: user.email,
                     photoURL: user.photoURL || ""
                 };
-
+                /* Hide login, show dashboard */
+                loginOverlay.classList.add("hidden");
+                dashboardContent.classList.remove("hidden");
                 updateAuthUI(true, userData);
-
             } else {
+                /* Show login, hide dashboard */
+                loginOverlay.classList.remove("hidden");
+                dashboardContent.classList.add("hidden");
                 updateAuthUI(false, null);
             }
         });
     }
 
-    /* ===========================================================
+    /* ===========================================
        updateAuthUI()
-       - true:  hides login buttons, shows profile
-       - false: shows login buttons, hides profile
-    =========================================================== */
+       =========================================== */
     function updateAuthUI(isLoggedIn, userData) {
         if (isLoggedIn && userData) {
-            /* Desktop: hide login button, show profile */
             authLoginBtn.style.display = "none";
             authProfile.style.display = "block";
             authAvatar.src = userData.photoURL;
@@ -689,193 +475,80 @@
             authDropdownAvatar.src = userData.photoURL;
             authDropdownName.textContent = userData.displayName;
             authDropdownEmail.textContent = userData.email;
-
-            /* Mobile: hide login button, show profile card */
             authLoginBtnMobile.style.display = "none";
             authMobileProfile.style.display = "flex";
             authMobileAvatar.src = userData.photoURL;
             authMobileName.textContent = userData.displayName;
             authMobileEmail.textContent = userData.email;
-
-            /* Fallback avatar if photoURL fails to load */
             var fallback = getAvatarFallback(userData.displayName);
             authAvatar.onerror = function() { this.src = fallback; };
             authDropdownAvatar.onerror = function() { this.src = fallback; };
             authMobileAvatar.onerror = function() { this.src = fallback; };
-
         } else {
-            /* Desktop: show login button, hide profile */
             authLoginBtn.style.display = "inline-flex";
             authProfile.style.display = "none";
-
-            /* Mobile: show login button, hide profile card */
             authLoginBtnMobile.style.display = "inline-flex";
             authMobileProfile.style.display = "none";
-
-            /* Clear all profile data to prevent stale info */
-            authAvatar.src = "";
-            authTriggerName.textContent = "";
-            authDropdownAvatar.src = "";
-            authDropdownName.textContent = "";
-            authDropdownEmail.textContent = "";
-            authMobileAvatar.src = "";
-            authMobileName.textContent = "";
-            authMobileEmail.textContent = "";
-
+            authAvatar.src = ""; authTriggerName.textContent = "";
+            authDropdownAvatar.src = ""; authDropdownName.textContent = ""; authDropdownEmail.textContent = "";
+            authMobileAvatar.src = ""; authMobileName.textContent = ""; authMobileEmail.textContent = "";
             closeAuthDropdown();
         }
     }
 
-    /* ===========================================================
+    /* ===========================================
        handleAuthError()
-       Maps Firebase error codes to user-friendly toasts.
-       Silently ignores popup-closed-by-user (not a real error).
-    =========================================================== */
+       =========================================== */
     function handleAuthError(error) {
         if (error.code === "auth/popup-closed-by-user") return;
-
         switch (error.code) {
-            case "auth/popup-blocked":
-                authShowToast("Popup blocked by browser. Please allow popups for this site.", "error");
-                break;
-            case "auth/cancelled-popup-request":
-                break;
-            case "auth/invalid-api-key":
-                authShowToast("Invalid Firebase API key. Check your firebaseConfig.", "error");
-                break;
-            case "auth/network-request-failed":
-                authShowToast("Network error. Check your connection and try again.", "error");
-                break;
-            case "auth/too-many-requests":
-                authShowToast("Too many attempts. Wait a moment and try again.", "warning");
-                break;
-            default:
-                authShowToast("Sign-in failed: " + (error.message || "Unknown error."), "error");
+            case "auth/popup-blocked": authShowToast("Popup blocked by browser. Please allow popups.", "error"); break;
+            case "auth/cancelled-popup-request": break;
+            case "auth/network-request-failed": authShowToast("Network error. Check your connection.", "error"); break;
+            case "auth/too-many-requests": authShowToast("Too many attempts. Wait a moment.", "warning"); break;
+            default: authShowToast("Sign-in failed: " + (error.message || "Unknown error."), "error");
         }
         console.error("Auth Error:", error.code, error.message);
     }
 
-    /* ===========================================================
+    /* ===========================================
        DROPDOWN TOGGLE
-       =========================================================== */
-    authProfileTrigger.addEventListener("click", function(e) {
-        e.stopPropagation();
-        isDropdownOpen ? closeAuthDropdown() : openAuthDropdown();
-    });
+       =========================================== */
+    authProfileTrigger.addEventListener("click", function(e) { e.stopPropagation(); isDropdownOpen ? closeAuthDropdown() : openAuthDropdown(); });
+    function openAuthDropdown() { authDropdown.classList.add("open"); authProfileTrigger.classList.add("active"); authProfileTrigger.setAttribute("aria-expanded", "true"); isDropdownOpen = true; }
+    function closeAuthDropdown() { authDropdown.classList.remove("open"); authProfileTrigger.classList.remove("active"); authProfileTrigger.setAttribute("aria-expanded", "false"); isDropdownOpen = false; }
+    document.addEventListener("click", function(e) { if (isDropdownOpen && !authProfile.contains(e.target)) closeAuthDropdown(); });
+    document.addEventListener("keydown", function(e) { if (e.key === "Escape" && isDropdownOpen) { closeAuthDropdown(); authProfileTrigger.focus(); } });
 
-    function openAuthDropdown() {
-        authDropdown.classList.add("open");
-        authProfileTrigger.classList.add("active");
-        authProfileTrigger.setAttribute("aria-expanded", "true");
-        isDropdownOpen = true;
-    }
+    /* ===========================================
+       HELPERS
+       =========================================== */
+    function authShowLoading(msg) { authLoadingText.textContent = msg || "Loading..."; authLoadingOverlay.classList.add("active"); }
+    function authHideLoading() { authLoadingOverlay.classList.remove("active"); }
 
-    function closeAuthDropdown() {
-        authDropdown.classList.remove("open");
-        authProfileTrigger.classList.remove("active");
-        authProfileTrigger.setAttribute("aria-expanded", "false");
-        isDropdownOpen = false;
-    }
-
-    /* Close dropdown when clicking outside */
-    document.addEventListener("click", function(e) {
-        if (isDropdownOpen && !authProfile.contains(e.target)) {
-            closeAuthDropdown();
-        }
-    });
-
-    /* Close dropdown on Escape key */
-    document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape" && isDropdownOpen) {
-            closeAuthDropdown();
-            authProfileTrigger.focus();
-        }
-    });
-
-    /* ===========================================================
-       LOADING HELPERS
-       =========================================================== */
-    function authShowLoading(msg) {
-        authLoadingText.textContent = msg || "Loading...";
-        authLoadingOverlay.classList.add("active");
-    }
-
-    function authHideLoading() {
-        authLoadingOverlay.classList.remove("active");
-    }
-
-    /* ===========================================================
-       TOAST NOTIFICATION SYSTEM
-       Reuses the existing #toastContainer.
-       - type: "error" | "success" | "warning"
-       - duration: auto-dismiss time in ms
-    =========================================================== */
     function authShowToast(message, type, duration) {
-        type = type || "error";
-        duration = duration || 4000;
-
-        var iconClass;
-        switch (type) {
-            case "success": iconClass = "fas fa-circle-check"; break;
-            case "warning": iconClass = "fas fa-triangle-exclamation"; break;
-            default:        iconClass = "fas fa-circle-xmark"; break;
-        }
-
+        type = type || "error"; duration = duration || 4000;
+        var iconClass = type === "success" ? "fas fa-circle-check" : type === "warning" ? "fas fa-triangle-exclamation" : "fas fa-circle-xmark";
         var toast = document.createElement("div");
         toast.className = "toast toast--" + type;
         toast.setAttribute("role", "alert");
         toast.innerHTML = '<i class="' + iconClass + '"></i><span>' + escapeHTML(message) + '</span>';
         toastContainer.appendChild(toast);
-
-        /* Auto-remove after duration */
-        setTimeout(function() {
-            toast.style.animation = "authToastOut 0.3s ease forwards";
-            setTimeout(function() {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 300);
-        }, duration);
+        setTimeout(function() { toast.style.animation = "authToastOut 0.3s ease forwards"; setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300); }, duration);
     }
 
-    /* ===========================================================
-       UTILITIES
-       =========================================================== */
+    function escapeHTML(str) { var d = document.createElement("div"); d.appendChild(document.createTextNode(str)); return d.innerHTML; }
 
-    /* Escape HTML to prevent XSS in toast messages */
-    function escapeHTML(str) {
-        var d = document.createElement("div");
-        d.appendChild(document.createTextNode(str));
-        return d.innerHTML;
-    }
-
-    /* Generate SVG fallback avatar with first letter of name */
     function getAvatarFallback(name) {
         var letter = name ? name.charAt(0).toUpperCase() : "U";
-        return "data:image/svg+xml," + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
-            '<rect width="100" height="100" fill="%23111b30"/>' +
-            '<text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text></svg>'
-        );
+        return "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111b30"/><text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text></svg>');
     }
 
-    /* Close mobile nav — uses existing function if available */
     function closeMobileNav() {
-        if (typeof closeMobileMenu === "function") {
-            closeMobileMenu();
-        } else {
-            var o = document.getElementById("mobileNavOverlay");
-            var m = document.getElementById("mobileNav");
-            var h = document.getElementById("hamburger");
-            if (o) o.classList.remove("active");
-            if (m) m.classList.remove("active");
-            if (h) h.classList.remove("active");
-        }
+        if (typeof closeMobileMenu === "function") { closeMobileMenu(); }
+        else { var o = document.getElementById("mobileNavOverlay"); var m = document.getElementById("mobileNav"); var h = document.getElementById("hamburger"); if (o) o.classList.remove("active"); if (m) m.classList.remove("active"); if (h) h.classList.remove("active"); }
     }
 
-    /* ===========================================================
-       BOOT: Start listening for auth state changes
-       Fires immediately on page load, so existing sessions
-       are restored with no flicker and no fake state.
-    =========================================================== */
     checkLoginState();
     </script>
 
