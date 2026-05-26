@@ -2,20 +2,8 @@
    NOTEVAULT — Frontend JavaScript
    ============================================ */
 
-const API_BASE = 'https://note-share-vit.onrender.com';
-const ALLOWED_DOMAIN = "@vitstudent.ac.in";
+const API_BASE = 'https://YOUR_BACKEND_URL';
 
-// --- Firebase Initialization ---
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
-
-// ============================================
-// GLOBAL VARIABLES
-// ============================================
-let currentUser = null;
 let allNotes = [];
 let searchTimeout = null;
 let selectedFile = null;
@@ -23,9 +11,10 @@ let selectedFileData = null;
 let uploadMode = 'file';
 let deleteTargetId = null;
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_TYPE = 'application/pdf';
 
+// ─── Get or create unique uploader ID ───
 function getUploaderId() {
     let id = localStorage.getItem('notevault_uploader_id');
     if (!id) {
@@ -34,164 +23,10 @@ function getUploaderId() {
     }
     return id;
 }
+
 const MY_UPLOADER_ID = getUploaderId();
 
-// ============================================
-// AUTH STATE & UI MANAGEMENT
-// ============================================
-function saveUser(user) {
-    currentUser = {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        photo: user.photoURL
-    };
-    localStorage.setItem('notevault_user', JSON.stringify(currentUser));
-}
-
-function getSavedUser() {
-    const user = localStorage.getItem('notevault_user');
-    return user ? JSON.parse(user) : null;
-}
-
-function logoutUser() {
-    localStorage.removeItem('notevault_user');
-    currentUser = null;
-    updateAuthUI();
-}
-
-function updateAuthUI() {
-    // Grab elements exactly as named in your HTML
-    const loginScreen = document.getElementById("loginScreen");
-    const mainWebsite = document.getElementById("mainWebsite");
-    const userBox = document.getElementById('userProfileBox');
-    const userName = document.getElementById('userName');
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-    const navLoginBtn = document.getElementById('navLoginBtn');
-
-    if (currentUser) {
-        // HIDE LOGIN, SHOW WEBSITE
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (mainWebsite) mainWebsite.style.display = 'block';
-        if (googleLoginBtn) googleLoginBtn.style.display = 'none';
-        if (navLoginBtn) navLoginBtn.style.display = 'none';
-        if (userBox) userBox.style.display = 'flex';
-        if (userName) userName.textContent = currentUser.name;
-    } else {
-        // SHOW LOGIN, HIDE WEBSITE
-        if (loginScreen) loginScreen.style.display = 'flex';
-        if (mainWebsite) mainWebsite.style.display = 'none';
-        if (googleLoginBtn) googleLoginBtn.style.display = 'flex';
-        if (navLoginBtn) navLoginBtn.style.display = ''; // Resets to CSS default
-        if (userBox) userBox.style.display = 'none';
-    }
-}
-
-function initGoogleAuth() {
-    // 1. Handle Redirect Result
-    auth.getRedirectResult().then((result) => {
-        if (result.user) {
-            processAuthUser(result.user);
-        } else if (!currentUser) {
-            currentUser = getSavedUser();
-            updateAuthUI();
-        }
-    }).catch((error) => {
-        // DEBUG: This will force show the exact error blocking the login
-        alert("DEBUG ERROR: " + error.message);
-    });
-
-    // 2. Handle Persistent Sessions
-    auth.onAuthStateChanged((user) => {
-        if (user && !currentUser) {
-            processAuthUser(user);
-        } else if (!user && currentUser) {
-            logoutUser();
-        }
-    });
-
-    // 3. Attach Click Listeners
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-    const navLoginBtn = document.getElementById('navLoginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    if (googleLoginBtn) {
-        googleLoginBtn.addEventListener("click", () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
-        });
-    }
-
-    if (navLoginBtn) {
-        navLoginBtn.addEventListener("click", () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
-        });
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
-    }
-}
-    }).catch((error) => {
-        console.error("Redirect Error:", error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-            showToast("Login failed. Check console or try again.", "error");
-        }
-    });
-
-    // 2. Handle Persistent Sessions (Catches redirect instantly)
-    auth.onAuthStateChanged((user) => {
-        if (user && !currentUser) {
-            processAuthUser(user);
-        } else if (!user && currentUser) {
-            logoutUser();
-        }
-    });
-
-    // 3. Attach Click Listeners
-    const googleLoginBtn = document.getElementById('googleLoginBtn');
-    const navLoginBtn = document.getElementById('navLoginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    if (googleLoginBtn) {
-        googleLoginBtn.addEventListener("click", () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
-        });
-    }
-
-    if (navLoginBtn) {
-        navLoginBtn.addEventListener("click", () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
-        });
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
-    }
-}
-
-function processAuthUser(user) {
-    if (!user.email.endsWith(ALLOWED_DOMAIN)) {
-        showToast("Access Denied: Only VIT student emails are allowed.", "error");
-        auth.signOut();
-        return;
-    }
-    saveUser(user);
-    updateAuthUI();
-}
-
-// ============================================
-// DOM READY INITIALIZATION
-// ============================================
-function initApp() {
-    initGoogleAuth(); // Must be first
+document.addEventListener('DOMContentLoaded', () => {
     initParticles();
     initHeroEntrance();
     initTypingAnimation();
@@ -205,28 +40,18 @@ function initApp() {
     initSearch();
     initScrollReveal();
     initCardGlowDelegate();
-    init3DCardTilt();
-    initStatsScrollAnimation();
     initDeleteModal();
     fetchAndRenderNotes();
     initSmoothScroll();
-    fetchUserAnnouncements();
-}
-
-// Failsafe DOM Ready check
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp(); // DOM already loaded
-}
-
+    init3DCardTilt();
+    initStatsScrollAnimation();
+});
 
 /* ===========================================
    PARTICLE BACKGROUND
    =========================================== */
 function initParticles() {
     const canvas = document.getElementById('particleCanvas');
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let particles = [];
     const PARTICLE_COUNT = 65;
@@ -307,7 +132,6 @@ function initHeroEntrance() {
 function initTypingAnimation() {
     const phrases = ['One Click Away.', 'Shared Instantly.', 'Organized Simply.', 'Searchable Easily.', 'Free Forever.'];
     const typedEl = document.getElementById('typedText');
-    if(!typedEl) return;
     let pi = 0, ci = 0, isDel = false, speed = 80;
 
     function type() {
@@ -330,7 +154,7 @@ function initNavbar() {
     const sections = document.querySelectorAll('section[id]');
 
     window.addEventListener('scroll', () => {
-        if(navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
+        navbar.classList.toggle('scrolled', window.scrollY > 60);
         let current = '';
         sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
         navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === `#${current}`));
@@ -343,15 +167,13 @@ function initMobileNav() {
     const overlay = document.getElementById('mobileNavOverlay');
     const links = document.querySelectorAll('.mobile-nav-link, .mobile-nav-cta');
 
-    if (!hamburger || !mobileNav) return;
-
     function toggle() {
         hamburger.classList.toggle('active'); mobileNav.classList.toggle('active');
-        if(overlay) overlay.classList.toggle('active');
+        overlay.classList.toggle('active');
         document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
     }
     hamburger.addEventListener('click', toggle);
-    if(overlay) overlay.addEventListener('click', toggle);
+    overlay.addEventListener('click', toggle);
     links.forEach(l => l.addEventListener('click', toggle));
 }
 
@@ -403,13 +225,13 @@ function initUploadModeToggle() {
     const fileRow = document.getElementById('fileZoneRow');
     const urlRow = document.getElementById('urlZoneRow');
 
-    if(fileBtn) fileBtn.addEventListener('click', () => {
-        uploadMode = 'file'; fileBtn.classList.add('active'); if(urlBtn) urlBtn.classList.remove('active');
-        if(fileRow) fileRow.style.display = ''; if(urlRow) urlRow.style.display = 'none';
+    fileBtn.addEventListener('click', () => {
+        uploadMode = 'file'; fileBtn.classList.add('active'); urlBtn.classList.remove('active');
+        fileRow.style.display = ''; urlRow.style.display = 'none';
     });
-    if(urlBtn) urlBtn.addEventListener('click', () => {
-        uploadMode = 'url'; urlBtn.classList.add('active'); if(fileBtn) fileBtn.classList.remove('active');
-        if(urlRow) urlRow.style.display = ''; if(fileRow) fileRow.style.display = 'none'; clearFileSelection();
+    urlBtn.addEventListener('click', () => {
+        uploadMode = 'url'; urlBtn.classList.add('active'); fileBtn.classList.remove('active');
+        urlRow.style.display = ''; fileRow.style.display = 'none'; clearFileSelection();
     });
 }
 
@@ -422,15 +244,13 @@ function initFileUpload() {
     const fileRemove = document.getElementById('fileRemove');
     const fileError = document.getElementById('fileError');
 
-    if (!dropZone || !fileInput) return;
-
     dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFileSelection(e.target.files[0]); });
 
     dropZone.addEventListener('dragenter', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
     dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('drag-over'); });
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); if(fileError) fileError.textContent = ''; if (e.dataTransfer.files.length) handleFileSelection(e.dataTransfer.files[0]); });
+    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); fileError.textContent = ''; if (e.dataTransfer.files.length) handleFileSelection(e.dataTransfer.files[0]); });
 
     dropZone.addEventListener('mousemove', (e) => {
         const r = dropZone.getBoundingClientRect();
@@ -438,48 +258,43 @@ function initFileUpload() {
         dropZone.style.setProperty('--glow-y', ((e.clientY - r.top) / r.height * 100) + '%');
     });
 
-    if(fileRemove) fileRemove.addEventListener('click', (e) => { e.stopPropagation(); clearFileSelection(); });
+    fileRemove.addEventListener('click', (e) => { e.stopPropagation(); clearFileSelection(); });
 }
 
 function handleFileSelection(file) {
     const dropZone = document.getElementById('fileDropZone');
     const filePreview = document.getElementById('filePreview');
     const fileError = document.getElementById('fileError');
-    if(fileError) fileError.textContent = ''; dropZone.classList.remove('zone-error');
+    fileError.textContent = ''; dropZone.classList.remove('zone-error');
 
     if (file.type !== ALLOWED_TYPE && !file.name.toLowerCase().endsWith('.pdf')) {
-        if(fileError) fileError.textContent = 'Only PDF files are allowed.';
+        fileError.textContent = 'Only PDF files are allowed.';
         dropZone.classList.add('zone-error'); setTimeout(() => dropZone.classList.remove('zone-error'), 500); return;
     }
     if (file.size > MAX_FILE_SIZE) {
-        if(fileError) fileError.textContent = `File is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum allowed size is 50MB.`;
+        fileError.textContent = `File is ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum allowed size is 50MB.`;
         dropZone.classList.add('zone-error'); setTimeout(() => dropZone.classList.remove('zone-error'), 500); return;
     }
 
     selectedFile = file;
-    const fileNameEl = document.getElementById('fileName');
-    const fileSizeEl = document.getElementById('fileSize');
-    if(fileNameEl) fileNameEl.textContent = file.name;
-    if(fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
 
     const reader = new FileReader();
     reader.onload = (e) => { selectedFileData = e.target.result; };
     reader.readAsDataURL(file);
 
     dropZone.classList.add('has-file');
-    if(filePreview) filePreview.classList.add('visible');
+    filePreview.classList.add('visible');
 }
 
 function clearFileSelection() {
     selectedFile = null; selectedFileData = null;
     const dz = document.getElementById('fileDropZone');
-    if(dz) dz.classList.remove('has-file', 'zone-error');
-    const fp = document.getElementById('filePreview');
-    if(fp) fp.classList.remove('visible');
-    const fi = document.getElementById('fileInput');
-    if(fi) fi.value = '';
-    const fe = document.getElementById('fileError');
-    if(fe) fe.textContent = '';
+    dz.classList.remove('has-file', 'zone-error');
+    document.getElementById('filePreview').classList.remove('visible');
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileError').textContent = '';
 }
 
 function formatFileSize(bytes) {
@@ -489,11 +304,10 @@ function formatFileSize(bytes) {
 }
 
 /* ===========================================
-   TOAST NOTIFICATION
+   TOAST
    =========================================== */
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
-    if(!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     const icons = { success: 'fa-check', error: 'fa-xmark', info: 'fa-info' };
@@ -508,7 +322,6 @@ function showToast(message, type = 'success') {
    =========================================== */
 function launchConfetti() {
     const container = document.getElementById('confettiContainer');
-    if(!container) return;
     const colors = ['#00d4ff', '#7b2ff7', '#00ff88', '#ff8c42', '#ff4d6d', '#ffdd57'];
     for (let i = 0; i < 50; i++) {
         const piece = document.createElement('div');
@@ -533,12 +346,24 @@ function initDeleteModal() {
     const modal = document.getElementById('deleteModal');
     const cancelBtn = document.getElementById('modalCancel');
     const confirmBtn = document.getElementById('modalConfirm');
-    if (!modal || !cancelBtn || !confirmBtn) return;
 
+    // Close on cancel
     cancelBtn.addEventListener('click', closeDeleteModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeDeleteModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('active')) closeDeleteModal(); });
-    confirmBtn.addEventListener('click', () => { if (deleteTargetId) executeDelete(deleteTargetId); });
+
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeDeleteModal();
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) closeDeleteModal();
+    });
+
+    // Confirm delete
+    confirmBtn.addEventListener('click', () => {
+        if (deleteTargetId) executeDelete(deleteTargetId);
+    });
 }
 
 function openDeleteModal(noteId) {
@@ -547,15 +372,14 @@ function openDeleteModal(noteId) {
     if (!note) return;
 
     const preview = document.getElementById('modalNotePreview');
-    if(preview) preview.innerHTML = `<div class="mnp-code">${escapeHTML(note.courseCode)} · ${escapeHTML(note.unitNumber)}</div><div class="mnp-name">${escapeHTML(note.courseName)}</div>`;
+    preview.innerHTML = `<div class="mnp-code">${escapeHTML(note.courseCode)} · ${escapeHTML(note.unitNumber)}</div><div class="mnp-name">${escapeHTML(note.courseName)}</div>`;
 
-    const modal = document.getElementById('deleteModal');
-    if(modal) { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    document.getElementById('deleteModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    if(modal) modal.classList.remove('active');
+    document.getElementById('deleteModal').classList.remove('active');
     document.body.style.overflow = '';
     deleteTargetId = null;
 }
@@ -578,10 +402,17 @@ async function executeDelete(noteId) {
         if (response.ok) {
             showToast('Note deleted successfully.', 'info');
             closeDeleteModal();
+
+            // Animate card out then re-render
             const card = document.querySelector(`.note-card[data-note-id="${noteId}"]`);
             if (card) {
-                gsap.to(card, { opacity: 0, scale: 0.9, y: 20, duration: 0.35, ease: 'power2.in', onComplete: () => fetchAndRenderNotes() });
-            } else { fetchAndRenderNotes(); }
+                gsap.to(card, {
+                    opacity: 0, scale: 0.9, y: 20, duration: 0.35, ease: 'power2.in',
+                    onComplete: () => fetchAndRenderNotes()
+                });
+            } else {
+                fetchAndRenderNotes();
+            }
         } else {
             showToast(result.message || 'Failed to delete. You can only delete your own notes.', 'error');
             closeDeleteModal();
@@ -596,6 +427,7 @@ async function executeDelete(noteId) {
     }
 }
 
+// Delegate click for delete buttons on cards
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.note-delete-btn');
     if (!btn) return;
@@ -609,16 +441,9 @@ document.addEventListener('click', (e) => {
    =========================================== */
 function initForm() {
     const form = document.getElementById('uploadForm');
-    if (!form) return;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        if (!currentUser) {
-            showToast("Please log in with your VIT email to upload notes.", "error");
-            return;
-        }
-
         clearFormErrors();
 
         const data = {
@@ -628,15 +453,12 @@ function initForm() {
             semester: document.getElementById('semester').value.trim(),
             facultyName: document.getElementById('facultyName').value.trim(),
             unitNumber: document.getElementById('unitNumber').value.trim(),
-            uploaderId: currentUser.uid,
-            uploaderEmail: currentUser.email,
-            uploaderName: currentUser.name
+            uploaderId: MY_UPLOADER_ID
         };
 
         if (uploadMode === 'file') {
             if (!selectedFile || !selectedFileData) {
-                const fileError = document.getElementById('fileError');
-                if(fileError) fileError.textContent = 'Please select a PDF file to upload.';
+                document.getElementById('fileError').textContent = 'Please select a PDF file to upload.';
                 return;
             }
             data.pdfUrl = selectedFileData;
@@ -684,25 +506,21 @@ function validateForm(data) {
         { key: 'facultyName', label: 'Faculty Name is required' },
         { key: 'unitNumber', label: 'Unit Number is required' }
     ].forEach(f => {
-        const el = document.getElementById(f.key);
-        const errEl = document.getElementById(f.key + 'Error');
         if (!data[f.key]) {
-            if(el) el.classList.add('input-error');
-            if(errEl) errEl.textContent = f.label;
+            document.getElementById(f.key).classList.add('input-error');
+            document.getElementById(f.key + 'Error').textContent = f.label;
             isValid = false;
         }
     });
 
     if (uploadMode === 'url') {
-        const urlEl = document.getElementById('pdfUrl');
-        const urlErrEl = document.getElementById('pdfUrlError');
         if (!data.pdfUrl) {
-            if(urlEl) urlEl.classList.add('input-error');
-            if(urlErrEl) urlErrEl.textContent = 'PDF URL is required';
+            document.getElementById('pdfUrl').classList.add('input-error');
+            document.getElementById('pdfUrlError').textContent = 'PDF URL is required';
             isValid = false;
         } else if (!isValidUrl(data.pdfUrl)) {
-            if(urlEl) urlEl.classList.add('input-error');
-            if(urlErrEl) urlErrEl.textContent = 'Please enter a valid URL';
+            document.getElementById('pdfUrl').classList.add('input-error');
+            document.getElementById('pdfUrlError').textContent = 'Please enter a valid URL';
             isValid = false;
         }
     }
@@ -719,17 +537,17 @@ function initSearch() {
     const input = document.getElementById('searchInput');
     const clearBtn = document.getElementById('searchClear');
     const pulse = document.getElementById('searchPulse');
-    if (!input) return;
 
     input.addEventListener('input', () => {
         const q = input.value.trim();
-        if(clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
-        if(pulse) { pulse.classList.remove('active'); void pulse.offsetWidth; if (q) pulse.classList.add('active'); }
+        clearBtn.style.display = q ? 'flex' : 'none';
+        pulse.classList.remove('active'); void pulse.offsetWidth;
+        if (q) pulse.classList.add('active');
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => performSearch(q), 250);
     });
 
-    if(clearBtn) clearBtn.addEventListener('click', () => {
+    clearBtn.addEventListener('click', () => {
         input.value = ''; clearBtn.style.display = 'none';
         renderNotesGrid(allNotes); updateNotesSubtitle(allNotes.length, false);
     });
@@ -751,7 +569,6 @@ async function performSearch(query) {
 
 function updateNotesSubtitle(count, isSearch, query = '') {
     const el = document.getElementById('notesSubtitle');
-    if(!el) return;
     el.textContent = isSearch ? (count > 0 ? `Found ${count} result${count !== 1 ? 's' : ''} for "${query}"` : `No results found for "${query}"`) : 'Browse all uploaded notes from every department.';
 }
 
@@ -773,7 +590,6 @@ async function fetchAndRenderNotes() {
 
 function renderRecentUploads(notes) {
     const grid = document.getElementById('recentGrid');
-    if (!grid) return;
     if (!notes.length) { grid.innerHTML = getEmptyStateHTML('recent'); return; }
     grid.innerHTML = notes.slice(0, 3).map(n => createNoteCardHTML(n)).join('');
     gsap.fromTo(grid.querySelectorAll('.note-card'), { opacity: 0, y: 30, rotateX: 5 }, { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out' });
@@ -781,9 +597,8 @@ function renderRecentUploads(notes) {
 
 function renderNotesGrid(notes) {
     const grid = document.getElementById('notesGrid');
-    if (!grid) return;
     if (!notes.length && !allNotes.length) { grid.innerHTML = getEmptyStateHTML('all'); return; }
-    if (!notes.length && document.getElementById('searchInput')?.value.trim()) {
+    if (!notes.length && document.getElementById('searchInput').value.trim()) {
         grid.innerHTML = '<div class="no-results"><i class="fas fa-magnifying-glass"></i><p>No notes match your search. Try different keywords.</p></div>';
         return;
     }
@@ -831,7 +646,6 @@ function getEmptyStateHTML(type) {
 
 function showSkeletons(id, count) {
     const el = document.getElementById(id);
-    if (!el) return;
     let h = '';
     for (let i = 0; i < count; i++) h += '<div class="skeleton-card"><div class="skeleton-line w-40"></div><div class="skeleton-line w-80"></div><div class="skeleton-line w-60"></div><div class="skeleton-line w-50"></div><div class="skeleton-line w-70"></div><div class="skeleton-line w-30"></div></div>';
     el.innerHTML = h;
@@ -866,7 +680,6 @@ document.addEventListener('click', (e) => {
    =========================================== */
 function updateSearchTags(notes) {
     const container = document.getElementById('searchTags');
-    if (!container) return;
     if (!notes.length) { container.innerHTML = '<span class="search-tag-hint">Quick filters will appear here after you upload notes</span>'; return; }
     let html = '';
     [...new Set(notes.map(n => n.department))].slice(0, 3).forEach(d => { html += `<button class="search-tag" onclick="quickSearch('${escapeHTML(d)}')">${escapeHTML(d)}</button>`; });
@@ -876,9 +689,8 @@ function updateSearchTags(notes) {
 
 function quickSearch(term) {
     const input = document.getElementById('searchInput');
-    if(input) { input.value = term; input.dispatchEvent(new Event('input')); }
-    const notesSection = document.getElementById('notes');
-    if(notesSection) notesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    input.value = term; input.dispatchEvent(new Event('input'));
+    document.getElementById('notes').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ===========================================
@@ -909,9 +721,7 @@ function animateCounter(id, target) {
 }
 
 function initStatsScrollAnimation() {
-    const grid = document.getElementById('statsGrid'); 
-    if(!grid) return;
-    let done = false;
+    const grid = document.getElementById('statsGrid'); let done = false;
     new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && !done) {
             done = true;
@@ -947,49 +757,7 @@ function initCardGlowDelegate() {
    SCROLL REVEAL (AOS)
    =========================================== */
 function initScrollReveal() {
-    if(typeof AOS !== 'undefined') {
-        AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60, disable: window.innerWidth < 768 ? 'phone' : false });
-    }
-}
-
-/* ===========================================
-   USER ANNOUNCEMENTS
-   =========================================== */
-async function fetchUserAnnouncements() {
-    const container = document.getElementById('userAnnouncementsList');
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/admin/announcements`);
-        const data = await res.json();
-
-        if (res.ok && data.announcements && data.announcements.length > 0) {
-            container.innerHTML = data.announcements.map(a => `
-                <div class="user-announcement-card">
-                    <div class="user-announcement-title">
-                        <i class="fas fa-bullhorn"></i>
-                        ${escapeHTML(a.title)}
-                        <span class="user-announcement-date">${getTimeAgo(a.createdAt)}</span>
-                    </div>
-                    <div class="user-announcement-message">${escapeHTML(a.message)}</div>
-                </div>
-            `).join('');
-
-            gsap.fromTo(container.querySelectorAll('.user-announcement-card'),
-                { opacity: 0, x: -20 },
-                { opacity: 1, x: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' }
-            );
-        } else {
-            container.innerHTML = `
-                <div class="announcements-empty-user">
-                    <i class="fas fa-bullhorn"></i>
-                    No announcements right now.
-                </div>
-            `;
-        }
-    } catch (err) {
-        container.innerHTML = '';
-    }
+    AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 60, disable: window.innerWidth < 768 ? 'phone' : false });
 }
 
 /* ===========================================
