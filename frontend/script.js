@@ -3,6 +3,10 @@
    ============================================ */
 
 const API_BASE = 'https://note-share-vit.onrender.com';
+const auth = firebase.auth();
+
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+const navLoginBtn = document.getElementById('navLoginBtn');
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -158,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatsScrollAnimation();
     fetchUserAnnouncements();   // ← ADD THIS LINE
    initGoogleAuth();
+   checkLoginState();
 });
 
 /* ===========================================
@@ -932,3 +937,103 @@ function getTimeAgo(dateString) {
     const d = Math.floor(h / 24);
     return d < 30 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
 }
+/* ===========================================
+   GOOGLE LOGIN
+=========================================== */
+
+async function handleGoogleLogin() {
+    try {
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        const result = await auth.signInWithPopup(provider);
+
+        const user = result.user;
+
+        // Allow only VIT mails
+        if (!user.email.endsWith("@vitstudent.ac.in")) {
+
+            alert("Only VIT student emails are allowed!");
+
+            await auth.signOut();
+
+            return;
+        }
+
+        showUser(user);
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+}
+
+function showUser(user) {
+
+    // Hide login screen
+    document.getElementById("loginScreen").style.display = "none";
+
+    // Show website
+    document.getElementById("mainWebsite").style.display = "block";
+
+    // Show profile box
+    document.getElementById("userProfileBox").style.display = "flex";
+
+    // Set user data
+    document.getElementById("userPhoto").src = user.photoURL;
+
+    document.getElementById("userName").innerText = user.displayName;
+
+    document.getElementById("userEmail").innerText = user.email;
+
+    // Hide navbar login button
+    if (navLoginBtn) {
+        navLoginBtn.style.display = "none";
+    }
+}
+
+function checkLoginState() {
+
+    auth.onAuthStateChanged((user) => {
+
+        if (user) {
+
+            if (user.email.endsWith("@vitstudent.ac.in")) {
+
+                showUser(user);
+
+            } else {
+
+                auth.signOut();
+            }
+
+        } else {
+
+            document.getElementById("loginScreen").style.display = "flex";
+
+            document.getElementById("mainWebsite").style.display = "none";
+        }
+    });
+}
+
+// Login buttons
+googleLoginBtn.addEventListener("click", handleGoogleLogin);
+
+if (navLoginBtn) {
+
+    navLoginBtn.addEventListener("click", handleGoogleLogin);
+}
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+
+    await auth.signOut();
+
+    location.reload();
+});
