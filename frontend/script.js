@@ -801,7 +801,7 @@ function getTimeAgo(dateString) {
 
 /* Store fetched announcements to avoid re-fetching */
 let fetchedAnnouncements = [];
-
+const ANNOUNCEMENT_MOCK_MODE = false;
 /* Fetch announcements on page load (only if user is logged in) */
 function fetchAnnouncements() {
     fetch(API_BASE + '/announcements')
