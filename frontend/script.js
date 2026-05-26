@@ -80,41 +80,25 @@ function logoutUser() {
 function updateAuthUI() {
 
     const loginBtn =
-        document.getElementById(
-            'googleLoginBtn'
-        );
+        document.getElementById('googleLoginBtn');
 
     const userBox =
-        document.getElementById(
-            'userProfileBox'
-        );
+        document.getElementById('userProfileBox');
 
     const userName =
-        document.getElementById(
-            'userName'
-        );
+        document.getElementById('userName');
 
     const userEmail =
-        document.getElementById(
-            'userEmail'
-        );
+        document.getElementById('userEmail');
 
     const userPhoto =
-        document.getElementById(
-            'userPhoto'
-        );
+        document.getElementById('userPhoto');
 
     const authScreen =
-        document.getElementById(
-            'authScreen'
-        );
+        document.getElementById('authScreen');
 
     const mainWebsite =
-        document.getElementById(
-            'mainWebsite'
-        );
-
-    if (!loginBtn || !userBox) return;
+        document.getElementById('mainWebsite');
 
     if (currentUser) {
 
@@ -126,24 +110,36 @@ function updateAuthUI() {
             mainWebsite.style.display = 'block';
         }
 
-        loginBtn.style.display = 'none';
+        if (loginBtn) {
+            loginBtn.style.display = 'none';
+        }
 
-        userBox.style.display = 'flex';
+        if (userBox) {
+            userBox.style.display = 'flex';
+        }
 
-        userName.innerText =
-            currentUser.name;
+        // FIXED NULL ERRORS
+        if (userName) {
+            userName.innerText = currentUser.name || '';
+        }
 
-        userEmail.innerText =
-            currentUser.email;
+        if (userEmail) {
+            userEmail.innerText = currentUser.email || '';
+        }
 
-        userPhoto.src =
-            currentUser.photo;
+        if (userPhoto) {
+            userPhoto.src = currentUser.photo || '';
+        }
 
     } else {
 
-        loginBtn.style.display = 'flex';
+        if (loginBtn) {
+            loginBtn.style.display = 'flex';
+        }
 
-        userBox.style.display = 'none';
+        if (userBox) {
+            userBox.style.display = 'none';
+        }
     }
 }
 
