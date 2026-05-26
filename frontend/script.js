@@ -1,31 +1,46 @@
 /* ============================================
-   NOTEVAULT — Frontend JavaScript (CORRECTED)
+   NOTEVAULT — Frontend JavaScript (FIXED)
    ============================================ */
 
 const API_BASE = 'https://note-share-vit.onrender.com';
 const ALLOWED_DOMAIN = "@vitstudent.ac.in";
 
-// --- Safe Firebase Initialization (v8 Compat) ---
+// --- Safe Firebase Initialization (v8) ---
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig); // Assumes firebaseConfig is in your HTML
+    firebase.initializeApp(firebaseConfig); // Uses firebaseConfig from your HTML
 }
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// --- DOM Elements ---
-const googleLoginBtn = document.getElementById('googleLoginBtn');
-const navLoginBtn = document.getElementById('navLoginBtn');
-const logoutBtn = document.getElementById('logoutBtn'); // Was missing, added here
-const loginScreen = document.getElementById("loginScreen");
-const mainWebsite = document.getElementById("mainWebsite");
-
 // ============================================
-// GOOGLE AUTH STATE
+// GLOBAL VARIABLES
 // ============================================
 let currentUser = null;
+let allNotes = [];
+let searchTimeout = null;
+let selectedFile = null;
+let selectedFileData = null;
+let uploadMode = 'file';
+let deleteTargetId = null;
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_TYPE = 'application/pdf';
+
+function getUploaderId() {
+    let id = localStorage.getItem('notevault_uploader_id');
+    if (!id) {
+        id = 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('notevault_uploader_id', id);
+    }
+    return id;
+}
+const MY_UPLOADER_ID = getUploaderId();
+
+
+// ============================================
+// GOOGLE AUTH STATE & UI
+// ============================================
 function saveUser(user) {
-    // Map Firebase user to your app's user format
     currentUser = {
         uid: user.uid,
         name: user.displayName,
@@ -43,39 +58,48 @@ function getSavedUser() {
 function logoutUser() {
     localStorage.removeItem('notevault_user');
     currentUser = null;
-    updateAuthUI(); // Smoothly update UI instead of reloading
+    updateAuthUI(); // Smoothly update UI without reloading
 }
 
 function updateAuthUI() {
+    // We grab these elements INSIDE the function so they are never null
+    const loginScreen = document.getElementById("loginScreen");
+    const mainWebsite = document.getElementById("mainWebsite");
     const userBox = document.getElementById('userProfileBox');
     const userName = document.getElementById('userName');
     const userEmail = document.getElementById('userEmail');
     const userPhoto = document.getElementById('userPhoto');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const navLoginBtn = document.getElementById('navLoginBtn');
 
     if (currentUser) {
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (mainWebsite) mainWebsite.style.display = 'block';
         if (googleLoginBtn) googleLoginBtn.style.display = 'none';
         if (navLoginBtn) navLoginBtn.style.display = 'none';
         if (userBox) userBox.style.display = 'flex';
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (mainWebsite) mainWebsite.style.display = 'block';
 
         if (userName) userName.textContent = currentUser.name;
         if (userEmail) userEmail.textContent = currentUser.email;
         if (userPhoto) userPhoto.src = currentUser.photo;
     } else {
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (mainWebsite) mainWebsite.style.display = 'none';
         if (googleLoginBtn) googleLoginBtn.style.display = 'flex';
         if (navLoginBtn) navLoginBtn.style.display = 'flex';
         if (userBox) userBox.style.display = 'none';
-        if (loginScreen) loginScreen.style.display = 'flex';
-        if (mainWebsite) mainWebsite.style.display = 'none';
     }
 }
 
 function initGoogleAuth() {
-    // 1. Handle Redirect Result (Triggers when page loads after Google Login)
+    // 1. Check Redirect Result (Triggers when returning from Google Login page)
     auth.getRedirectResult().then((result) => {
         if (result.user) {
             processAuthUser(result.user);
+        } else if (!currentUser) {
+            // No redirect result, restore session from local storage if exists
+            currentUser = getSavedUser();
+            updateAuthUI();
         }
     }).catch((error) => {
         handleAuthError(error);
@@ -90,7 +114,11 @@ function initGoogleAuth() {
         }
     });
 
-    // 3. Attach Login Listeners
+    // 3. Attach Login Button Listeners
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const navLoginBtn = document.getElementById('navLoginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener("click", () => {
             provider.setCustomParameters({ prompt: 'select_account' });
@@ -132,35 +160,10 @@ function handleAuthError(error) {
 
 
 // ============================================
-// GLOBAL VARIABLES
-// ============================================
-let allNotes = [];
-let searchTimeout = null;
-let selectedFile = null;
-let selectedFileData = null;
-let uploadMode = 'file';
-let deleteTargetId = null;
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_TYPE = 'application/pdf';
-
-// ─── Get or create unique uploader ID ───
-function getUploaderId() {
-    let id = localStorage.getItem('notevault_uploader_id');
-    if (!id) {
-        id = 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-        localStorage.setItem('notevault_uploader_id', id);
-    }
-    return id;
-}
-
-const MY_UPLOADER_ID = getUploaderId();
-
-
-// ============================================
 // INITIALIZATION ON DOM READY
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
+    initGoogleAuth();      // Must be first to handle login state
     initParticles();
     initHeroEntrance();
     initTypingAnimation();
@@ -174,13 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearch();
     initScrollReveal();
     initCardGlowDelegate();
-    fetchAndRenderNotes();
-    initSmoothScroll();
     init3DCardTilt();
     initStatsScrollAnimation();
+    initDeleteModal();
+    fetchAndRenderNotes();
+    initSmoothScroll();
     fetchUserAnnouncements();
-    initDeleteModal(); // Was missing from DOMContentLoaded
-    initGoogleAuth();  // Handles both login state and listeners
 });
 
 
@@ -577,7 +579,6 @@ function initForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Security/Logic check: Prevent unauthenticated uploads
         if (!currentUser) {
             showToast("Please log in with your VIT email to upload notes.", "error");
             return;
