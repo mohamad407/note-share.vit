@@ -5,7 +5,7 @@
 // ============================================
 // API BASE
 // ============================================
-
+localStorage.removeItem('notevault_user');
 const API_BASE = 'https://note-share-vit.onrender.com';
 
 // ============================================
