@@ -84,7 +84,29 @@ document.getElementById("googleLoginBtn").addEventListener("click", async () => 
 
     try {
 
-        const result = await firebase.auth().signInWithPopup(provider);
+        const result =await firebase.auth().signInWithRedirect(provider);
+       firebase.auth().getRedirectResult()
+.then((result) => {
+
+    if (result.user) {
+
+        document.getElementById("loginScreen").style.display = "none";
+
+        document.getElementById("mainWebsite").style.display = "block";
+
+        document.getElementById("userName").innerText = result.user.displayName;
+
+        document.getElementById("userEmail").innerText = result.user.email;
+
+        document.getElementById("userPhoto").src = result.user.photoURL;
+
+        document.getElementById("userProfileBox").style.display = "flex";
+    }
+
+})
+.catch((error) => {
+    console.log(error);
+});
 
         const user = result.user;
 
