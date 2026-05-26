@@ -88,15 +88,53 @@ function updateAuthUI() {
 }
 
 function initGoogleAuth() {
-    // 1. Handle Redirect Result (When user comes back from Google Login)
+    // 1. Handle Redirect Result
     auth.getRedirectResult().then((result) => {
         if (result.user) {
             processAuthUser(result.user);
         } else if (!currentUser) {
-            // No redirect, restore session if exists
             currentUser = getSavedUser();
             updateAuthUI();
         }
+    }).catch((error) => {
+        // DEBUG: This will force show the exact error blocking the login
+        alert("DEBUG ERROR: " + error.message);
+    });
+
+    // 2. Handle Persistent Sessions
+    auth.onAuthStateChanged((user) => {
+        if (user && !currentUser) {
+            processAuthUser(user);
+        } else if (!user && currentUser) {
+            logoutUser();
+        }
+    });
+
+    // 3. Attach Click Listeners
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const navLoginBtn = document.getElementById('navLoginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener("click", () => {
+            provider.setCustomParameters({ prompt: 'select_account' });
+            auth.signInWithRedirect(provider);
+        });
+    }
+
+    if (navLoginBtn) {
+        navLoginBtn.addEventListener("click", () => {
+            provider.setCustomParameters({ prompt: 'select_account' });
+            auth.signInWithRedirect(provider);
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+    }
+}
     }).catch((error) => {
         console.error("Redirect Error:", error);
         if (error.code !== 'auth/popup-closed-by-user') {
