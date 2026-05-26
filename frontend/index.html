@@ -16,7 +16,7 @@
     <!-- AOS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 
-    <!-- AUTH START: Firebase CDN (classic compat syntax) -->
+    <!-- AUTH START: Firebase CDN (classic compat syntax only) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <!-- AUTH END: Firebase CDN -->
@@ -32,15 +32,15 @@
     <!-- Confetti Container -->
     <div id="confettiContainer"></div>
 
-    <!-- Toast Container -->
+    <!-- Toast Container (reused by auth toasts) -->
     <div id="toastContainer"></div>
 
-    <!-- AUTH START: Loading Overlay (shown during sign-in / sign-out) -->
+    <!-- AUTH START: Full-screen loading overlay shown during sign-in / sign-out -->
     <div class="auth-loading-overlay" id="authLoadingOverlay" role="alert" aria-live="assertive">
         <div class="auth-spinner"></div>
         <span class="auth-loading-text" id="authLoadingText">Signing you in...</span>
     </div>
-    <!-- AUTH END: Loading Overlay -->
+    <!-- AUTH END: Loading overlay -->
 
     <!-- Delete Confirmation Modal -->
     <div class="modal-overlay" id="deleteModal">
@@ -80,7 +80,7 @@
 
             <div class="nav-actions">
 
-                <!-- AUTH START: Login Button (visible when NOT logged in) -->
+                <!-- AUTH START: Desktop Sign In button (hidden when logged in) -->
                 <button class="auth-login-btn" id="authLoginBtn" onclick="handleLoginClick()" aria-label="Sign in with Google">
                     <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -90,9 +90,9 @@
                     </svg>
                     <span>Sign In</span>
                 </button>
-                <!-- AUTH END: Login Button -->
+                <!-- AUTH END: Desktop Sign In button -->
 
-                <!-- AUTH START: Profile Dropdown (visible when logged in) -->
+                <!-- AUTH START: Desktop profile dropdown (hidden when NOT logged in) -->
                 <div class="auth-profile" id="authProfile">
                     <button class="auth-profile-trigger" id="authProfileTrigger" aria-label="User menu" aria-expanded="false">
                         <img class="auth-avatar" id="authAvatar" src="" alt="User avatar">
@@ -118,7 +118,7 @@
                         </button>
                     </div>
                 </div>
-                <!-- AUTH END: Profile Dropdown -->
+                <!-- AUTH END: Desktop profile dropdown -->
 
                 <a href="#upload" class="nav-cta-btn" id="navUploadBtn">
                     <i class="fas fa-cloud-arrow-up"></i>
@@ -142,9 +142,9 @@
                 <li><a href="#stats" class="mobile-nav-link">Stats</a></li>
             </ul>
 
-            <!-- AUTH START: Mobile nav auth buttons -->
+            <!-- AUTH START: Mobile nav auth area -->
             <div class="mobile-nav-auth" id="mobileNavAuth">
-                <!-- Login button for mobile (shown when NOT logged in) -->
+                <!-- Mobile Sign In button (hidden when logged in) -->
                 <button class="auth-login-btn auth-login-btn--mobile" id="authLoginBtnMobile" onclick="handleLoginClick()">
                     <svg class="auth-google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -154,8 +154,8 @@
                     </svg>
                     <span>Sign In with Google</span>
                 </button>
-                <!-- Profile card for mobile (shown when logged in) -->
-                <div class="auth-mobile-profile" id="authMobileProfile" style="display:none;">
+                <!-- Mobile profile card (hidden when NOT logged in) -->
+                <div class="auth-mobile-profile" id="authMobileProfile">
                     <img class="auth-mobile-avatar" id="authMobileAvatar" src="" alt="User avatar">
                     <span class="auth-mobile-name" id="authMobileName"></span>
                     <span class="auth-mobile-email" id="authMobileEmail"></span>
@@ -167,7 +167,7 @@
                     </button>
                 </div>
             </div>
-            <!-- AUTH END: Mobile nav auth buttons -->
+            <!-- AUTH END: Mobile nav auth area -->
 
             <a href="#upload" class="mobile-nav-cta">
                 <i class="fas fa-cloud-arrow-up"></i> Upload Notes
@@ -305,7 +305,6 @@
                             </div>
                         </div>
 
-                        <!-- PDF Upload Mode Toggle -->
                         <div class="form-row form-row-full">
                             <div class="form-group">
                                 <label>
@@ -322,7 +321,6 @@
                             </div>
                         </div>
 
-                        <!-- File Upload Zone -->
                         <div class="form-row form-row-full" id="fileZoneRow">
                             <div class="form-group">
                                 <div class="file-drop-zone" id="fileDropZone">
@@ -359,7 +357,6 @@
                             </div>
                         </div>
 
-                        <!-- URL Input Zone -->
                         <div class="form-row form-row-full" id="urlZoneRow" style="display:none;">
                             <div class="form-group">
                                 <label for="pdfUrl">
@@ -531,16 +528,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="script.js"></script>
 
-    <!-- AUTH START: Firebase Auth Script -->
+    <!-- AUTH START: Firebase Google Authentication Logic -->
     <script>
     /* ===========================================================
-       FIREBASE GOOGLE AUTHENTICATION — NoteVault Integration
+       FIREBASE GOOGLE AUTH — NoteVault
        ===========================================================
-       Add your Firebase project credentials below.
-       Get them from: Firebase Console > Project Settings > Web App
+       Replace the placeholder values below with your actual
+       Firebase project credentials from:
+       Firebase Console > Project Settings > Web Apps
     =========================================================== */
 
-    /* ---- Firebase Configuration (REPLACE WITH YOUR VALUES) ---- */
+    /* ---- Step 1: Firebase Configuration ---- */
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY_HERE",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -550,21 +548,21 @@
         appId: "YOUR_APP_ID"
     };
 
-    /* ---- Initialize Firebase App & Auth ---- */
+    /* ---- Step 2: Initialize Firebase App & Auth ---- */
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    /* ---- Allowed email domain restriction ---- */
+    /* ---- Step 3: Allowed email domain ---- */
     const ALLOWED_DOMAIN = "@vitstudent.ac.in";
 
-    /* ---- Prevents duplicate login popup ---- */
+    /* ---- Step 4: Duplicate popup guard ---- */
     let isLoginInProgress = false;
 
-    /* ---- Track dropdown open/close state ---- */
+    /* ---- Step 5: Dropdown state ---- */
     let isDropdownOpen = false;
 
     /* ===========================================================
-       DOM ELEMENT REFERENCES
+       DOM REFERENCES
        =========================================================== */
     const authLoginBtn       = document.getElementById("authLoginBtn");
     const authLoginBtnMobile = document.getElementById("authLoginBtnMobile");
@@ -579,21 +577,18 @@
     const authLoadingOverlay = document.getElementById("authLoadingOverlay");
     const authLoadingText    = document.getElementById("authLoadingText");
     const toastContainer     = document.getElementById("toastContainer");
-
-    /* Mobile auth elements */
-    const mobileNavAuth     = document.getElementById("mobileNavAuth");
-    const authMobileProfile = document.getElementById("authMobileProfile");
-    const authMobileAvatar  = document.getElementById("authMobileAvatar");
-    const authMobileName    = document.getElementById("authMobileName");
-    const authMobileEmail   = document.getElementById("authMobileEmail");
+    const authMobileProfile  = document.getElementById("authMobileProfile");
+    const authMobileAvatar   = document.getElementById("authMobileAvatar");
+    const authMobileName     = document.getElementById("authMobileName");
+    const authMobileEmail    = document.getElementById("authMobileEmail");
 
     /* ===========================================================
        initGoogleAuth()
        ===========================================================
-       Creates a Google Auth Provider with:
-       - profile + email scopes requested
+       Creates a GoogleAuthProvider with:
+       - profile + email scopes
        - prompt: "select_account" to always show the account
-         picker (prevents silent re-use / duplicate popup bug)
+         picker and prevent duplicate popup issues
     =========================================================== */
     function initGoogleAuth() {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -608,12 +603,11 @@
     /* ===========================================================
        handleLoginClick()
        ===========================================================
-       Called when any Sign In button is clicked.
-       Guards against duplicate popups with isLoginInProgress flag.
-       Shows loading overlay during the auth operation.
+       Triggered by any Sign In button.
+       Blocks duplicate popups, shows loading, calls
+       firebase.auth().signInWithPopup(provider).
     =========================================================== */
     function handleLoginClick() {
-        /* Block duplicate popup */
         if (isLoginInProgress) {
             authShowToast("Please wait, sign-in is already in progress.", "warning");
             return;
@@ -621,15 +615,12 @@
 
         isLoginInProgress = true;
         authShowLoading("Signing you in...");
-
-        /* Close mobile nav if open */
         closeMobileNav();
 
         const provider = initGoogleAuth();
 
         auth.signInWithPopup(provider)
             .then(function(result) {
-                /* Success — onAuthStateChanged handles UI */
                 authHideLoading();
                 isLoginInProgress = false;
             })
@@ -643,8 +634,7 @@
     /* ===========================================================
        handleLogout()
        ===========================================================
-       Signs the user out and lets onAuthStateChanged
-       reset the UI to the logged-out state.
+       Signs out the user. onAuthStateChanged resets the UI.
     =========================================================== */
     function handleLogout() {
         authShowLoading("Signing you out...");
@@ -664,20 +654,18 @@
     /* ===========================================================
        checkLoginState()
        ===========================================================
-       THE single source of truth for login state.
-       Uses firebase.auth().onAuthStateChanged() which:
-       - Fires immediately on page load (checks session)
-       - Fires on sign-in
-       - Fires on sign-out
-       - Fires on tab focus (refreshes token)
-       This means NO fake login state after refresh.
+       Single source of truth. Uses
+       firebase.auth().onAuthStateChanged() which fires:
+       - On page load (checks existing session)
+       - On sign-in
+       - On sign-out
+       - On tab focus
+       No fake login state after refresh.
     =========================================================== */
     function checkLoginState() {
         auth.onAuthStateChanged(function(user) {
             if (user) {
-                /* ---- User is signed in ---- */
-
-                /* Enforce @vitstudent.ac.in domain restriction */
+                /* Enforce @vitstudent.ac.in restriction */
                 if (!user.email.toLowerCase().endsWith(ALLOWED_DOMAIN)) {
                     auth.signOut().then(function() {
                         authShowToast(
@@ -688,18 +676,15 @@
                     return;
                 }
 
-                /* Build user data object */
                 var userData = {
                     displayName: user.displayName || "VIT Student",
                     email: user.email,
                     photoURL: user.photoURL || ""
                 };
 
-                /* Update all UI to logged-in state */
                 updateAuthUI(true, userData);
 
             } else {
-                /* ---- User is NOT signed in ---- */
                 updateAuthUI(false, null);
             }
         });
@@ -708,52 +693,43 @@
     /* ===========================================================
        updateAuthUI()
        ===========================================================
-       Toggles every auth-related element based on login state.
-       - isLoggedIn = true  → hide login buttons, show profile
-       - isLoggedIn = false → show login buttons, hide profile
+       - true:  hides login buttons, shows profile
+       - false: shows login buttons, hides profile
     =========================================================== */
     function updateAuthUI(isLoggedIn, userData) {
         if (isLoggedIn && userData) {
-            /* ---- SHOW logged-in UI ---- */
-
-            /* Desktop navbar: hide login button, show profile trigger */
+            /* Desktop: hide login, show profile */
             authLoginBtn.style.display = "none";
             authProfile.style.display = "block";
-
-            /* Populate desktop trigger */
             authAvatar.src = userData.photoURL;
-            authTriggerName.textContent = userData.displayName.split(" ")[0]; // First name only
-
-            /* Populate desktop dropdown */
+            authTriggerName.textContent = userData.displayName.split(" ")[0];
             authDropdownAvatar.src = userData.photoURL;
             authDropdownName.textContent = userData.displayName;
             authDropdownEmail.textContent = userData.email;
 
-            /* Set fallback avatars if photoURL fails */
-            var fallbackSvg = getAvatarFallback(userData.displayName);
-            authAvatar.onerror = function() { this.src = fallbackSvg; };
-            authDropdownAvatar.onerror = function() { this.src = fallbackSvg; };
-
-            /* Mobile nav: hide login button, show profile card */
+            /* Mobile: hide login, show profile card */
             authLoginBtnMobile.style.display = "none";
-            authMobileProfile.style.display = "block";
+            authMobileProfile.style.display = "flex";
             authMobileAvatar.src = userData.photoURL;
             authMobileName.textContent = userData.displayName;
             authMobileEmail.textContent = userData.email;
-            authMobileAvatar.onerror = function() { this.src = fallbackSvg; };
+
+            /* Fallback avatar if photoURL fails */
+            var fallback = getAvatarFallback(userData.displayName);
+            authAvatar.onerror = function() { this.src = fallback; };
+            authDropdownAvatar.onerror = function() { this.src = fallback; };
+            authMobileAvatar.onerror = function() { this.src = fallback; };
 
         } else {
-            /* ---- SHOW logged-out UI ---- */
-
-            /* Desktop navbar: show login button, hide profile */
+            /* Desktop: show login, hide profile */
             authLoginBtn.style.display = "inline-flex";
             authProfile.style.display = "none";
 
-            /* Mobile nav: show login button, hide profile card */
+            /* Mobile: show login, hide profile card */
             authLoginBtnMobile.style.display = "inline-flex";
             authMobileProfile.style.display = "none";
 
-            /* Clear all profile data to prevent stale info */
+            /* Clear stale data */
             authAvatar.src = "";
             authTriggerName.textContent = "";
             authDropdownAvatar.src = "";
@@ -763,7 +739,6 @@
             authMobileName.textContent = "";
             authMobileEmail.textContent = "";
 
-            /* Ensure dropdown is closed */
             closeAuthDropdown();
         }
     }
@@ -771,47 +746,38 @@
     /* ===========================================================
        handleAuthError()
        ===========================================================
-       Maps Firebase error codes to user-friendly messages.
-       Silently ignores popup-closed-by-user (not a real error).
+       Maps Firebase error codes to user-friendly toasts.
     =========================================================== */
     function handleAuthError(error) {
-        if (error.code === "auth/popup-closed-by-user") {
-            return; // User closed the popup — not an error
-        }
+        if (error.code === "auth/popup-closed-by-user") return;
 
         switch (error.code) {
             case "auth/popup-blocked":
-                authShowToast("Popup was blocked by your browser. Please allow popups for this site.", "error");
+                authShowToast("Popup blocked by browser. Please allow popups for this site.", "error");
                 break;
             case "auth/cancelled-popup-request":
-                break; // Another popup was open — silently ignore
+                break;
             case "auth/invalid-api-key":
-                authShowToast("Invalid Firebase API key. Check your firebaseConfig in the HTML.", "error");
+                authShowToast("Invalid Firebase API key. Check your firebaseConfig.", "error");
                 break;
             case "auth/network-request-failed":
-                authShowToast("Network error. Check your internet connection and try again.", "error");
+                authShowToast("Network error. Check your connection and try again.", "error");
                 break;
             case "auth/too-many-requests":
-                authShowToast("Too many attempts. Please wait a moment and try again.", "warning");
+                authShowToast("Too many attempts. Wait a moment and try again.", "warning");
                 break;
             default:
                 authShowToast("Sign-in failed: " + (error.message || "Unknown error."), "error");
-                break;
         }
-
-        console.error("Firebase Auth Error:", error.code, error.message);
+        console.error("Auth Error:", error.code, error.message);
     }
 
     /* ===========================================================
-       DROPDOWN TOGGLE LOGIC
+       DROPDOWN TOGGLE
        =========================================================== */
     authProfileTrigger.addEventListener("click", function(e) {
         e.stopPropagation();
-        if (isDropdownOpen) {
-            closeAuthDropdown();
-        } else {
-            openAuthDropdown();
-        }
+        isDropdownOpen ? closeAuthDropdown() : openAuthDropdown();
     });
 
     function openAuthDropdown() {
@@ -828,14 +794,12 @@
         isDropdownOpen = false;
     }
 
-    /* Close dropdown when clicking outside */
+    /* Close on outside click */
     document.addEventListener("click", function(e) {
-        if (isDropdownOpen && !authProfile.contains(e.target)) {
-            closeAuthDropdown();
-        }
+        if (isDropdownOpen && !authProfile.contains(e.target)) closeAuthDropdown();
     });
 
-    /* Close dropdown on Escape key */
+    /* Close on Escape */
     document.addEventListener("keydown", function(e) {
         if (e.key === "Escape" && isDropdownOpen) {
             closeAuthDropdown();
@@ -844,10 +808,10 @@
     });
 
     /* ===========================================================
-       LOADING OVERLAY HELPERS
+       LOADING HELPERS
        =========================================================== */
-    function authShowLoading(message) {
-        authLoadingText.textContent = message || "Loading...";
+    function authShowLoading(msg) {
+        authLoadingText.textContent = msg || "Loading...";
         authLoadingOverlay.classList.add("active");
     }
 
@@ -856,12 +820,8 @@
     }
 
     /* ===========================================================
-       TOAST NOTIFICATION SYSTEM
-       ===========================================================
-       Reuses the existing #toastContainer from your HTML.
-       - type: "error" | "success" | "warning"
-       - duration: auto-dismiss time in ms
-    =========================================================== */
+       TOAST SYSTEM
+       =========================================================== */
     function authShowToast(message, type, duration) {
         type = type || "error";
         duration = duration || 4000;
@@ -876,13 +836,9 @@
         var toast = document.createElement("div");
         toast.className = "toast toast--" + type;
         toast.setAttribute("role", "alert");
-        toast.innerHTML =
-            '<i class="' + iconClass + '"></i>' +
-            '<span>' + escapeHTML(message) + '</span>';
-
+        toast.innerHTML = '<i class="' + iconClass + '"></i><span>' + escapeHTML(message) + '</span>';
         toastContainer.appendChild(toast);
 
-        /* Auto-remove */
         setTimeout(function() {
             toast.style.animation = "authToastOut 0.3s ease forwards";
             setTimeout(function() {
@@ -892,55 +848,42 @@
     }
 
     /* ===========================================================
-       UTILITY: Escape HTML (prevents XSS in toasts)
+       UTILITIES
        =========================================================== */
     function escapeHTML(str) {
-        var div = document.createElement("div");
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
+        var d = document.createElement("div");
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
     }
 
-    /* ===========================================================
-       UTILITY: Generate SVG fallback avatar
-       =========================================================== */
     function getAvatarFallback(name) {
         var letter = name ? name.charAt(0).toUpperCase() : "U";
         return "data:image/svg+xml," + encodeURIComponent(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
             '<rect width="100" height="100" fill="%23111b30"/>' +
-            '<text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text>' +
-            '</svg>'
+            '<text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text></svg>'
         );
     }
 
-    /* ===========================================================
-       UTILITY: Close mobile nav (calls existing function if available)
-       =========================================================== */
     function closeMobileNav() {
-        /* Try to use your existing close function if it exists */
         if (typeof closeMobileMenu === "function") {
             closeMobileMenu();
         } else {
-            /* Fallback: manually close */
-            var overlay = document.getElementById("mobileNavOverlay");
-            var mobileNav = document.getElementById("mobileNav");
-            var hamburger = document.getElementById("hamburger");
-            if (overlay) overlay.classList.remove("active");
-            if (mobileNav) mobileNav.classList.remove("active");
-            if (hamburger) hamburger.classList.remove("active");
+            var o = document.getElementById("mobileNavOverlay");
+            var m = document.getElementById("mobileNav");
+            var h = document.getElementById("hamburger");
+            if (o) o.classList.remove("active");
+            if (m) m.classList.remove("active");
+            if (h) h.classList.remove("active");
         }
     }
 
     /* ===========================================================
-       BOOT: Start listening for auth state changes
-       ===========================================================
-       This fires immediately on page load, so if the user
-       has an existing session, the UI updates instantly —
-       no flicker, no fake state.
-    =========================================================== */
+       BOOT: Start listening for auth state
+       =========================================================== */
     checkLoginState();
     </script>
-    <!-- AUTH END: Firebase Auth Script -->
+    <!-- AUTH END: Firebase Google Authentication Logic -->
 
 </body>
 </html>
