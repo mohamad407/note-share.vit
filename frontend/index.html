@@ -20,36 +20,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-    <div class="login-box">
 
-        <h1 class="login-title">
-            Welcome to <span>NoteVault</span>
-        </h1>
-
-        <p class="login-subtitle">
-            Please sign in to access the platform
-        </p>
-
-        <div class="login-note">
-            <p>
-                <strong>Note:</strong> Only VIT student emails ending with
-                <br>
-                <span>@vitstudent.ac.in</span>
-                are allowed to access this platform.
-            </p>
-        </div>
-
-        <button id="googleLoginBtn" class="google-login-btn">
-            <i class="fab fa-google"></i>
-            Login with VIT Mail
-        </button>
-
-    </div>
-</div>
-
-<div id="mainWebsite" style="display:none;">
     <!-- Particle Canvas Background -->
     <canvas id="particleCanvas"></canvas>
 
@@ -79,24 +50,6 @@
 
     <!-- ==================== NAVBAR ==================== -->
     <nav id="navbar">
-   <button id="navLoginBtn" class="btn-ripple" style="display:none;">
-    <i class="fab fa-google"></i>
-    Login with VIT Mail
-</button>
-
-<div id="userProfileBox" class="user-profile-box" style="display:none;">
-
-    <div class="user-info">
-        <i class="fas fa-user"></i>
-        <span id="userName"></span>
-    </div>
-
-    <button id="logoutBtn" class="logout-btn">
-        <i class="fas fa-right-from-bracket"></i>
-        Logout
-    </button>
-
-</div>
         <div class="nav-container">
             <a href="#" class="nav-logo">
                 <div class="logo-icon">
@@ -375,19 +328,6 @@
             </div>
         </div>
     </section>
-    <!-- ==================== ANNOUNCEMENTS SECTION ===================== -->
-<section id="announcements" style="padding-bottom: 40px;">
-    <div class="section-container">
-        <div class="section-header" data-aos="fade-up">
-            <span class="section-tag"><i class="fas fa-bullhorn"></i> Updates</span>
-            <h2 class="section-title">Announcements</h2>
-            <p class="section-subtitle">Important updates from the admin team.</p>
-        </div>
-        <div class="announcements-banner-list" id="userAnnouncementsList" data-aos="fade-up" data-aos-delay="200">
-            <!-- Dynamically rendered -->
-        </div>
-    </div>
-</section>
 
     <!-- ==================== RECENT UPLOADS SECTION ==================== -->
     <section id="recent">
@@ -508,24 +448,6 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD2jz8R-Ur7oX5lFtxroZ5Bs1xhO44-rdA",
-  authDomain: "notevault-1f4bb.firebaseapp.com",
-  projectId: "notevault-1f4bb",
-  storageBucket: "notevault-1f4bb.firebasestorage.app",
-  messagingSenderId: "600109075790",
-  appId: "1:600109075790:web:71626e8701726f3161e21f",
-  measurementId: "G-484XPXQLN7"
-};
-
-firebase.initializeApp(firebaseConfig);
-</script>
- <script src="script.js"></script>
-    </div>
+    <script src="script.js"></script>
 </body>
-</html> 
+</html>
