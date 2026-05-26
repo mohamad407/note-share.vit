@@ -20,10 +20,33 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="authScreen">
-    <button id="googleLoginBtn">
-        Login with VIT Mail
-    </button>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+    <div class="login-box">
+
+        <h1 class="login-title">
+            Welcome to <span>NoteVault</span>
+        </h1>
+
+        <p class="login-subtitle">
+            Please sign in to access the platform
+        </p>
+
+        <div class="login-note">
+            <p>
+                <strong>Note:</strong> Only VIT student emails ending with
+                <br>
+                <span>@vitstudent.ac.in</span>
+                are allowed to access this platform.
+            </p>
+        </div>
+
+        <button id="googleLoginBtn" class="google-login-btn">
+            <i class="fab fa-google"></i>
+            Login with VIT Mail
+        </button>
+
+    </div>
 </div>
 
 <div id="mainWebsite" style="display:none;">
