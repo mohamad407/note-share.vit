@@ -41,7 +41,6 @@
     </div>
 
     <!-- ==================== LOGIN OVERLAY ==================== -->
-    <!-- Shown when NOT logged in. Hides everything behind it. -->
     <div class="login-overlay" id="loginOverlay">
         <div class="hero-bg-glow hero-glow-1"></div>
         <div class="hero-bg-glow hero-glow-2"></div>
@@ -58,7 +57,6 @@
         </div>
 
         <div class="login-overlay-inner">
-            <!-- Navbar inside login -->
             <nav class="login-overlay-nav">
                 <div class="nav-container">
                     <a href="#" class="nav-logo">
@@ -72,7 +70,6 @@
                 </div>
             </nav>
 
-            <!-- Login Card -->
             <div class="login-card-wrapper">
                 <div class="form-glow-border">
                     <div class="login-card">
@@ -106,7 +103,6 @@
                 </div>
             </div>
 
-            <!-- Footer inside login -->
             <div class="login-overlay-footer">
                 Built with <i class="fas fa-heart" style="color:#ff4d6d;"></i> for VIT students — Your notes, your privacy.
             </div>
@@ -128,8 +124,8 @@
         </div>
     </div>
 
-    <!-- ==================== DASHBOARD (hidden until login) ==================== -->
-    <div class="dashboard-content" id="dashboardContent">
+    <!-- ==================== DASHBOARD ==================== -->
+    <div class="dashboard-content hidden" id="dashboardContent">
 
         <!-- NAVBAR -->
         <nav id="navbar">
@@ -326,6 +322,9 @@
 
     <!-- Firebase Auth -->
     <script>
+    /* ===========================================
+       FIREBASE CONFIG
+       =========================================== */
     const firebaseConfig = {
         apiKey: "AIzaSyD2jz8R-Ur7oX5lFtxroZ5Bs1xhO44-rdA",
         authDomain: "notevault-1f4bb.firebaseapp.com",
@@ -342,7 +341,9 @@
     let isLoginInProgress = false;
     let isDropdownOpen = false;
 
-    /* DOM */
+    /* ===========================================
+       DOM REFERENCES
+       =========================================== */
     const loginOverlay = document.getElementById("loginOverlay");
     const dashboardContent = document.getElementById("dashboardContent");
     const googleSignInBtn = document.getElementById("googleSignInBtn");
@@ -363,6 +364,17 @@
     const authMobileAvatar = document.getElementById("authMobileAvatar");
     const authMobileName = document.getElementById("authMobileName");
     const authMobileEmail = document.getElementById("authMobileEmail");
+
+    /* ===========================================
+       resetLoginState()
+       Unlocks the sign-in button after login
+       success, login error, logout, or session loss.
+       This fixes the "button dead after logout" bug.
+       =========================================== */
+    function resetLoginState() {
+        isLoginInProgress = false;
+        googleSignInBtn.disabled = false;
+    }
 
     /* ===========================================
        initGoogleAuth()
@@ -390,8 +402,15 @@
 
         const provider = initGoogleAuth();
         auth.signInWithPopup(provider)
-            .then(function() { authHideLoading(); isLoginInProgress = false; })
-            .catch(function(error) { authHideLoading(); isLoginInProgress = false; handleAuthError(error); });
+            .then(function() {
+                authHideLoading();
+                resetLoginState();
+            })
+            .catch(function(error) {
+                authHideLoading();
+                resetLoginState();
+                handleAuthError(error);
+            });
     }
 
     /* ===========================================
@@ -409,11 +428,13 @@
 
         const provider = initGoogleAuth();
         auth.signInWithPopup(provider)
-            .then(function() { authHideLoading(); })
+            .then(function() {
+                authHideLoading();
+                resetLoginState();
+            })
             .catch(function(error) {
                 authHideLoading();
-                isLoginInProgress = false;
-                googleSignInBtn.disabled = false;
+                resetLoginState();
                 handleAuthError(error);
             });
     }
@@ -426,39 +447,58 @@
     function handleLogout() {
         authShowLoading("Signing you out...");
         closeAuthDropdown();
+
         auth.signOut()
-            .then(function() { authHideLoading(); authShowToast("You have been signed out.", "success"); })
-            .catch(function(error) { authHideLoading(); authShowToast("Sign-out failed: " + error.message, "error"); });
+            .then(function() {
+                authHideLoading();
+                resetLoginState();
+                authShowToast("You have been signed out.", "success");
+            })
+            .catch(function(error) {
+                authHideLoading();
+                resetLoginState();
+                authShowToast("Sign-out failed: " + error.message, "error");
+            });
     }
 
     /* ===========================================
        checkLoginState()
-       Single source of truth. Toggles between
-       login overlay and dashboard — no redirects.
+       Single source of truth. Toggles login
+       overlay and dashboard — no redirects needed.
        =========================================== */
     function checkLoginState() {
         auth.onAuthStateChanged(function(user) {
             if (user) {
+                /* Enforce @vitstudent.ac.in restriction */
                 if (!user.email.toLowerCase().endsWith(ALLOWED_DOMAIN)) {
                     auth.signOut().then(function() {
-                        authShowToast("Access denied. Only " + ALLOWED_DOMAIN + " accounts are allowed.", "error");
+                        authShowToast(
+                            "Access denied. Only " + ALLOWED_DOMAIN + " accounts are allowed.",
+                            "error"
+                        );
                     });
                     return;
                 }
+
                 var userData = {
                     displayName: user.displayName || "VIT Student",
                     email: user.email,
                     photoURL: user.photoURL || ""
                 };
-                /* Hide login, show dashboard */
+
+                /* Hide login overlay, show dashboard */
                 loginOverlay.classList.add("hidden");
                 dashboardContent.classList.remove("hidden");
                 updateAuthUI(true, userData);
+
             } else {
-                /* Show login, hide dashboard */
+                /* Show login overlay, hide dashboard */
                 loginOverlay.classList.remove("hidden");
                 dashboardContent.classList.add("hidden");
                 updateAuthUI(false, null);
+
+                /* Ensure button is unlocked when session drops */
+                resetLoginState();
             }
         });
     }
@@ -475,23 +515,34 @@
             authDropdownAvatar.src = userData.photoURL;
             authDropdownName.textContent = userData.displayName;
             authDropdownEmail.textContent = userData.email;
+
             authLoginBtnMobile.style.display = "none";
             authMobileProfile.style.display = "flex";
             authMobileAvatar.src = userData.photoURL;
             authMobileName.textContent = userData.displayName;
             authMobileEmail.textContent = userData.email;
+
             var fallback = getAvatarFallback(userData.displayName);
             authAvatar.onerror = function() { this.src = fallback; };
             authDropdownAvatar.onerror = function() { this.src = fallback; };
             authMobileAvatar.onerror = function() { this.src = fallback; };
+
         } else {
             authLoginBtn.style.display = "inline-flex";
             authProfile.style.display = "none";
+
             authLoginBtnMobile.style.display = "inline-flex";
             authMobileProfile.style.display = "none";
-            authAvatar.src = ""; authTriggerName.textContent = "";
-            authDropdownAvatar.src = ""; authDropdownName.textContent = ""; authDropdownEmail.textContent = "";
-            authMobileAvatar.src = ""; authMobileName.textContent = ""; authMobileEmail.textContent = "";
+
+            authAvatar.src = "";
+            authTriggerName.textContent = "";
+            authDropdownAvatar.src = "";
+            authDropdownName.textContent = "";
+            authDropdownEmail.textContent = "";
+            authMobileAvatar.src = "";
+            authMobileName.textContent = "";
+            authMobileEmail.textContent = "";
+
             closeAuthDropdown();
         }
     }
@@ -501,12 +552,21 @@
        =========================================== */
     function handleAuthError(error) {
         if (error.code === "auth/popup-closed-by-user") return;
+
         switch (error.code) {
-            case "auth/popup-blocked": authShowToast("Popup blocked by browser. Please allow popups.", "error"); break;
-            case "auth/cancelled-popup-request": break;
-            case "auth/network-request-failed": authShowToast("Network error. Check your connection.", "error"); break;
-            case "auth/too-many-requests": authShowToast("Too many attempts. Wait a moment.", "warning"); break;
-            default: authShowToast("Sign-in failed: " + (error.message || "Unknown error."), "error");
+            case "auth/popup-blocked":
+                authShowToast("Popup blocked by browser. Please allow popups.", "error");
+                break;
+            case "auth/cancelled-popup-request":
+                break;
+            case "auth/network-request-failed":
+                authShowToast("Network error. Check your connection.", "error");
+                break;
+            case "auth/too-many-requests":
+                authShowToast("Too many attempts. Wait a moment.", "warning");
+                break;
+            default:
+                authShowToast("Sign-in failed: " + (error.message || "Unknown error."), "error");
         }
         console.error("Auth Error:", error.code, error.message);
     }
@@ -514,41 +574,110 @@
     /* ===========================================
        DROPDOWN TOGGLE
        =========================================== */
-    authProfileTrigger.addEventListener("click", function(e) { e.stopPropagation(); isDropdownOpen ? closeAuthDropdown() : openAuthDropdown(); });
-    function openAuthDropdown() { authDropdown.classList.add("open"); authProfileTrigger.classList.add("active"); authProfileTrigger.setAttribute("aria-expanded", "true"); isDropdownOpen = true; }
-    function closeAuthDropdown() { authDropdown.classList.remove("open"); authProfileTrigger.classList.remove("active"); authProfileTrigger.setAttribute("aria-expanded", "false"); isDropdownOpen = false; }
-    document.addEventListener("click", function(e) { if (isDropdownOpen && !authProfile.contains(e.target)) closeAuthDropdown(); });
-    document.addEventListener("keydown", function(e) { if (e.key === "Escape" && isDropdownOpen) { closeAuthDropdown(); authProfileTrigger.focus(); } });
+    authProfileTrigger.addEventListener("click", function(e) {
+        e.stopPropagation();
+        isDropdownOpen ? closeAuthDropdown() : openAuthDropdown();
+    });
+
+    function openAuthDropdown() {
+        authDropdown.classList.add("open");
+        authProfileTrigger.classList.add("active");
+        authProfileTrigger.setAttribute("aria-expanded", "true");
+        isDropdownOpen = true;
+    }
+
+    function closeAuthDropdown() {
+        authDropdown.classList.remove("open");
+        authProfileTrigger.classList.remove("active");
+        authProfileTrigger.setAttribute("aria-expanded", "false");
+        isDropdownOpen = false;
+    }
+
+    document.addEventListener("click", function(e) {
+        if (isDropdownOpen && !authProfile.contains(e.target)) closeAuthDropdown();
+    });
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && isDropdownOpen) {
+            closeAuthDropdown();
+            authProfileTrigger.focus();
+        }
+    });
 
     /* ===========================================
-       HELPERS
+       LOADING HELPERS
        =========================================== */
-    function authShowLoading(msg) { authLoadingText.textContent = msg || "Loading..."; authLoadingOverlay.classList.add("active"); }
-    function authHideLoading() { authLoadingOverlay.classList.remove("active"); }
+    function authShowLoading(msg) {
+        authLoadingText.textContent = msg || "Loading...";
+        authLoadingOverlay.classList.add("active");
+    }
 
+    function authHideLoading() {
+        authLoadingOverlay.classList.remove("active");
+    }
+
+    /* ===========================================
+       TOAST NOTIFICATION
+       =========================================== */
     function authShowToast(message, type, duration) {
-        type = type || "error"; duration = duration || 4000;
-        var iconClass = type === "success" ? "fas fa-circle-check" : type === "warning" ? "fas fa-triangle-exclamation" : "fas fa-circle-xmark";
+        type = type || "error";
+        duration = duration || 4000;
+
+        var iconClass;
+        switch (type) {
+            case "success": iconClass = "fas fa-circle-check"; break;
+            case "warning": iconClass = "fas fa-triangle-exclamation"; break;
+            default:        iconClass = "fas fa-circle-xmark"; break;
+        }
+
         var toast = document.createElement("div");
         toast.className = "toast toast--" + type;
         toast.setAttribute("role", "alert");
         toast.innerHTML = '<i class="' + iconClass + '"></i><span>' + escapeHTML(message) + '</span>';
         toastContainer.appendChild(toast);
-        setTimeout(function() { toast.style.animation = "authToastOut 0.3s ease forwards"; setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300); }, duration);
+
+        setTimeout(function() {
+            toast.style.animation = "authToastOut 0.3s ease forwards";
+            setTimeout(function() {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, duration);
     }
 
-    function escapeHTML(str) { var d = document.createElement("div"); d.appendChild(document.createTextNode(str)); return d.innerHTML; }
+    /* ===========================================
+       UTILITIES
+       =========================================== */
+    function escapeHTML(str) {
+        var d = document.createElement("div");
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
 
     function getAvatarFallback(name) {
         var letter = name ? name.charAt(0).toUpperCase() : "U";
-        return "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111b30"/><text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text></svg>');
+        return "data:image/svg+xml," + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+            '<rect width="100" height="100" fill="%23111b30"/>' +
+            '<text x="50" y="62" text-anchor="middle" font-size="40" fill="%2300d4ff" font-family="sans-serif" font-weight="600">' + letter + '</text></svg>'
+        );
     }
 
     function closeMobileNav() {
-        if (typeof closeMobileMenu === "function") { closeMobileMenu(); }
-        else { var o = document.getElementById("mobileNavOverlay"); var m = document.getElementById("mobileNav"); var h = document.getElementById("hamburger"); if (o) o.classList.remove("active"); if (m) m.classList.remove("active"); if (h) h.classList.remove("active"); }
+        if (typeof closeMobileMenu === "function") {
+            closeMobileMenu();
+        } else {
+            var o = document.getElementById("mobileNavOverlay");
+            var m = document.getElementById("mobileNav");
+            var h = document.getElementById("hamburger");
+            if (o) o.classList.remove("active");
+            if (m) m.classList.remove("active");
+            if (h) h.classList.remove("active");
+        }
     }
 
+    /* ===========================================
+       BOOT
+       =========================================== */
     checkLoginState();
     </script>
 
