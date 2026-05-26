@@ -1,11 +1,11 @@
 /* ============================================
-   NOTEVAULT — FULLY FIXED SCRIPT.JS
+   NOTEVAULT — FINAL FULLY FIXED SCRIPT.JS
    ============================================ */
 
 // ============================================
 // API BASE
 // ============================================
-localStorage.removeItem('notevault_user');
+
 const API_BASE = 'https://note-share-vit.onrender.com';
 
 // ============================================
@@ -26,52 +26,9 @@ let allNotes = [];
 let searchTimeout = null;
 let selectedFile = null;
 let selectedFileData = null;
-let uploadMode = 'file';
-let deleteTargetId = null;
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_TYPE = 'application/pdf';
-
-// ============================================
-// SAVE USER
-// ============================================
-
-function saveUser(user) {
-
-    currentUser = user;
-
-    localStorage.setItem(
-        'notevault_user',
-        JSON.stringify(user)
-    );
-}
-
-// ============================================
-// GET SAVED USER
-// ============================================
-
-function getSavedUser() {
-
-    const user =
-        localStorage.getItem('notevault_user');
-
-    return user ? JSON.parse(user) : null;
-}
-
-// ============================================
-// LOGOUT USER
-// ============================================
-
-function logoutUser() {
-
-    localStorage.removeItem(
-        'notevault_user'
-    );
-
-    currentUser = null;
-
-    location.reload();
-}
 
 // ============================================
 // UPDATE AUTH UI
@@ -97,7 +54,6 @@ function updateAuthUI() {
     // USER LOGGED IN
     if (currentUser) {
 
-        // KEEP LOGIN BUTTON VISIBLE
         if (loginBtn) {
 
             loginBtn.innerText =
@@ -108,12 +64,10 @@ function updateAuthUI() {
             loginBtn.style.opacity = '0.7';
         }
 
-        // SHOW USER PROFILE IF EXISTS
         if (userBox) {
             userBox.style.display = 'flex';
         }
 
-        // SAFE NULL CHECKS
         if (userName) {
             userName.innerText =
                 currentUser.name || '';
@@ -156,18 +110,37 @@ function updateAuthUI() {
 
 function checkLoginState() {
 
-    const savedUser = getSavedUser();
+    firebase.auth().onAuthStateChanged((user) => {
 
-    if (savedUser) {
+        // USER LOGGED IN
+        if (user) {
 
-        currentUser = savedUser;
+            currentUser = {
 
-        updateAuthUI();
-    }
+                uid: user.uid,
+
+                name: user.displayName,
+
+                email: user.email,
+
+                photo: user.photoURL
+            };
+
+            updateAuthUI();
+        }
+
+        // USER LOGGED OUT
+        else {
+
+            currentUser = null;
+
+            updateAuthUI();
+        }
+    });
 }
 
 // ============================================
-// INIT GOOGLE AUTH
+// GOOGLE LOGIN
 // ============================================
 
 function initGoogleAuth() {
@@ -212,7 +185,7 @@ function initGoogleAuth() {
                     return;
                 }
 
-                const userData = {
+                currentUser = {
 
                     uid: user.uid,
 
@@ -226,8 +199,6 @@ function initGoogleAuth() {
                         user.photoURL
                 };
 
-                saveUser(userData);
-
                 updateAuthUI();
 
                 showToast(
@@ -238,7 +209,7 @@ function initGoogleAuth() {
             } catch (error) {
 
                 console.error(
-                    'Google Login Error:',
+                    'Login Error:',
                     error
                 );
 
@@ -247,7 +218,7 @@ function initGoogleAuth() {
         }
     );
 
-    // LOGOUT
+    // LOGOUT BUTTON
     const logoutBtn =
         document.getElementById(
             'logoutBtn'
@@ -263,47 +234,21 @@ function initGoogleAuth() {
                     .auth()
                     .signOut();
 
-                logoutUser();
+                currentUser = null;
+
+                updateAuthUI();
+
+                showToast(
+                    'Logged out',
+                    'success'
+                );
             }
         );
     }
 }
 
 // ============================================
-// GET UPLOADER ID
-// ============================================
-
-function getUploaderId() {
-
-    let id =
-        localStorage.getItem(
-            'notevault_uploader_id'
-        );
-
-    if (!id) {
-
-        id =
-            'user_' +
-            Date.now().toString(36) +
-            '_' +
-            Math.random()
-                .toString(36)
-                .slice(2, 10);
-
-        localStorage.setItem(
-            'notevault_uploader_id',
-            id
-        );
-    }
-
-    return id;
-}
-
-const MY_UPLOADER_ID =
-    getUploaderId();
-
-// ============================================
-// DOM CONTENT LOADED
+// DOM LOADED
 // ============================================
 
 document.addEventListener(
@@ -318,9 +263,9 @@ document.addEventListener(
 
         initForm();
 
-        fetchAndRenderNotes();
-
         initSearch();
+
+        fetchAndRenderNotes();
     }
 );
 
@@ -353,21 +298,21 @@ function initFileUpload() {
             ) {
 
                 showToast(
-                    'Only PDF files allowed',
+                    'Only PDF allowed',
                     'error'
                 );
 
                 return;
             }
 
-            // SIZE LIMIT
+            // FILE SIZE
             if (
                 file.size >
                 MAX_FILE_SIZE
             ) {
 
                 showToast(
-                    'Max file size is 50MB',
+                    'Max 50MB allowed',
                     'error'
                 );
 
@@ -390,7 +335,7 @@ function initFileUpload() {
             );
 
             showToast(
-                'PDF selected successfully',
+                'PDF selected',
                 'success'
             );
         }
@@ -416,6 +361,7 @@ function initForm() {
 
             e.preventDefault();
 
+            // LOGIN REQUIRED
             if (!currentUser) {
 
                 showToast(
@@ -426,6 +372,7 @@ function initForm() {
                 return;
             }
 
+            // PDF REQUIRED
             if (!selectedFileData) {
 
                 showToast(
@@ -583,7 +530,7 @@ async function fetchAndRenderNotes() {
                 result.notes || [];
 
             console.log(
-                'Notes Loaded',
+                'Notes Loaded:',
                 allNotes
             );
         }
@@ -591,7 +538,7 @@ async function fetchAndRenderNotes() {
     } catch (error) {
 
         console.error(
-            'Fetch Error',
+            'Fetch Error:',
             error
         );
     }
