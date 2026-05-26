@@ -3,6 +3,121 @@
    ============================================ */
 
 const API_BASE = 'https://note-share-vit.onrender.com';
+// ============================================
+// GOOGLE AUTH
+// ============================================
+
+let currentUser = null;
+
+function saveUser(user) {
+    currentUser = user;
+    localStorage.setItem('notevault_user', JSON.stringify(user));
+}
+
+function getSavedUser() {
+    const user = localStorage.getItem('notevault_user');
+    return user ? JSON.parse(user) : null;
+}
+
+function logoutUser() {
+    localStorage.removeItem('notevault_user');
+    currentUser = null;
+    location.reload();
+}
+
+function updateAuthUI() {
+
+    const loginBtn = document.getElementById('googleLoginBtn');
+    const userBox = document.getElementById('userProfileBox');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const userPhoto = document.getElementById('userPhoto');
+
+    if (!loginBtn || !userBox) return;
+
+    if (currentUser) {
+
+        loginBtn.style.display = 'none';
+        userBox.style.display = 'flex';
+
+        userName.textContent = currentUser.name;
+        userEmail.textContent = currentUser.email;
+        userPhoto.src = currentUser.photo;
+
+    } else {
+
+        loginBtn.style.display = 'flex';
+        userBox.style.display = 'none';
+    }
+}
+
+function initGoogleAuth() {
+
+    currentUser = getSavedUser();
+
+    updateAuthUI();
+
+    const loginBtn = document.getElementById('googleLoginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (loginBtn) {
+
+        loginBtn.addEventListener('click', async () => {
+
+            try {
+
+                const provider = new firebase.auth.GoogleAuthProvider();
+
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+
+                const result = await firebase.auth().signInWithPopup(provider);
+
+                const user = result.user;
+
+                const email = user.email || '';
+
+                // ONLY VIT MAILS
+                if (!email.endsWith('@vitstudent.ac.in')) {
+
+                    await firebase.auth().signOut();
+
+                    showToast('Only VIT student emails are allowed.', 'error');
+
+                    return;
+                }
+
+                saveUser({
+                    name: user.displayName,
+                    email: user.email,
+                    photo: user.photoURL,
+                    uid: user.uid
+                });
+
+                updateAuthUI();
+
+                showToast('Logged in successfully!', 'success');
+
+            } catch (err) {
+
+                console.error(err);
+
+                showToast('Google login failed.', 'error');
+            }
+        });
+    }
+
+    if (logoutBtn) {
+
+        logoutBtn.addEventListener('click', async () => {
+
+            await firebase.auth().signOut();
+
+            logoutUser();
+        });
+    }
+}
 
 let allNotes = [];
 let searchTimeout = null;
