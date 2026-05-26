@@ -6,11 +6,13 @@ const API_BASE = 'https://note-share-vit.onrender.com';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
 // ============================================
 // GOOGLE AUTH
 // ============================================
@@ -65,57 +67,44 @@ function initGoogleAuth() {
 
     updateAuthUI();
 
-    const loginBtn = document.getElementById('googleLoginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
 
-    if (loginBtn) {
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-        loginBtn.addEventListener('click', async () => {
 
-            try {
+const loginBtn = document.getElementById("googleLoginBtn");
+const authScreen = document.getElementById("authScreen");
+const mainWebsite = document.getElementById("mainWebsite");
 
-                const provider = new firebase.auth.GoogleAuthProvider();
+loginBtn.addEventListener("click", async () => {
 
-                provider.setCustomParameters({
-                    prompt: 'select_account'
-                });
+    try {
 
-                const result = await firebase.auth().signInWithPopup(provider);
+        const result = await signInWithPopup(auth, provider);
 
-                const user = result.user;
+        const user = result.user;
 
-                const email = user.email || '';
+        if (!user.email.endsWith("@vitstudent.ac.in")) {
 
-                // ONLY VIT MAILS
-                if (!email.endsWith('@vitstudent.ac.in')) {
+            await signOut(auth);
 
-                    await firebase.auth().signOut();
+            alert("Only VIT student emails are allowed.");
 
-                    showToast('Only VIT student emails are allowed.', 'error');
+            return;
+        }
 
-                    return;
-                }
+        authScreen.style.display = "none";
+        mainWebsite.style.display = "block";
 
-                saveUser({
-                    name: user.displayName,
-                    email: user.email,
-                    photo: user.photoURL,
-                    uid: user.uid
-                });
+    } catch (error) {
 
-                updateAuthUI();
+        console.error(error);
 
-                showToast('Logged in successfully!', 'success');
-
-            } catch (err) {
-
-                console.error(err);
-
-                showToast('Google login failed.', 'error');
-            }
-        });
+        alert(error.message);
     }
 
+});
     if (logoutBtn) {
 
         logoutBtn.addEventListener('click', async () => {
