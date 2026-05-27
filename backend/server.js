@@ -1,6 +1,6 @@
 /**
  * ============================================
- * NOTEVAULT — Backend Server (MongoDB Version)
+ * NOTEVAULT — Backend Server (MongoDB Atlas Version)
  * ============================================
  */
 
@@ -11,27 +11,29 @@ const { MongoClient } = require('mongodb');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// MongoDB
+// MongoDB Atlas connection string — replace with your actual Atlas connection string
 const MONGO_URI = process.env.MONGO_URI;
 
-const client = new MongoClient(MONGO_URI);
+const client = new MongoClient(MONGO_URI;
 
 let notesCollection;
 let announcementsCollection;
+let dbReady = false;
 
-// Connect MongoDB
+/* ============================================
+   CONNECT MONGODB
+   ============================================ */
 async function connectDB() {
     try {
         await client.connect();
-
         const db = client.db("notevault");
-
-        notesCollection = db.collection("notes");
-        announcementsCollection = db.collection("announcements");
-
+        notesCollection = db.collection("notevault");
+        let announcementsCollection = db.collection("announcements");
+        dbReady = true;
         console.log("MongoDB Connected");
     } catch (error) {
         console.error("MongoDB Connection Error:", error);
+        process.exit(1);
     }
 }
 
@@ -42,8 +44,8 @@ app.use(express.json({ limit: '70mb' }));
 app.use(cors());
 
 // ─── Admin Configuration ───
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'asif';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Ummulhaina@20';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin_username';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_password';
 
 // ─── Admin Sessions ───
 const adminSessions = new Set();
@@ -53,9 +55,9 @@ function adminAuth(req, res, next) {
     const token = req.headers['x-admin-token'];
 
     if (!token || !adminSessions.has(token)) {
-        return res.status(401).json({
+        return res.status(191).json({
             success: false,
-            message: 'Unauthorized. Please log in.'
+            message: 'Session expired or unauthorized.'
         });
     }
 
@@ -64,11 +66,18 @@ function adminAuth(req, res, next) {
 
 /* ============================================
    PUBLIC APIs
-============================================ */
+   ============================================ */
 
 // Health Check
 app.get('/', async (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up... try again in a few seconds.'
+            });
+        }
+
         const totalNotes = await notesCollection.countDocuments();
 
         res.status(200).json({
@@ -79,6 +88,7 @@ app.get('/', async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Health check error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error'
@@ -89,6 +99,12 @@ app.get('/', async (req, res) => {
 // Get All Notes
 app.get('/notes', async (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const sorted = await notesCollection
             .find({})
@@ -102,19 +118,23 @@ app.get('/notes', async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Fetch notes error:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch notes'
+            message: 'Failed to fetch notes.'
         });
-
     }
 });
 
 // Upload Note
 app.post('/upload', async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const {
             courseCode,
@@ -123,8 +143,8 @@ app.post('/upload', async (req, res) => {
             semester,
             facultyName,
             unitNumber,
-            pdfUrl,
-            uploaderId
+            uploaderId,
+            pdfUrl
         } = req.body;
 
         if (
@@ -133,8 +153,8 @@ app.post('/upload', async (req, res) => {
             !department ||
             !semester ||
             !facultyName ||
-            !unitNumber ||
-            !pdfUrl
+            unitNumber === undefined ||
+            pdfUrl === undefined
         ) {
             return res.status(400).json({
                 success: false,
@@ -168,21 +188,23 @@ app.post('/upload', async (req, res) => {
         });
 
     } catch (error) {
-
         console.error('Upload error:', error);
-
         res.status(500).json({
             success: false,
             message: 'Internal server error.'
         });
-
     }
 });
 
 // Search Notes
 app.get('/search', async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const query = req.query.q;
 
@@ -211,19 +233,23 @@ app.get('/search', async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Search error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to search notes.'
         });
-
     }
 });
 
 // Delete Own Note
 app.delete('/notes/:id', async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const { id } = req.params;
         const { uploaderId } = req.body;
@@ -237,14 +263,14 @@ app.delete('/notes/:id', async (req, res) => {
             });
         }
 
-        if (!uploaderId) {
+        if (!uploaderId || !uploaderId.trim()) {
             return res.status(401).json({
                 success: false,
                 message: 'Uploader ID required.'
             });
         }
 
-        if (note.uploaderId !== uploaderId) {
+        if (note.uploaderId !== uploaderId.trim()) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only delete your own notes.'
@@ -259,24 +285,21 @@ app.delete('/notes/:id', async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Delete error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to delete note.'
         });
-
     }
 });
 
 /* ============================================
    ADMIN APIs
-============================================ */
+   ============================================ */
 
 // Admin Login
 app.post('/admin/login', (req, res) => {
-
     try {
-
         const { username, password } = req.body;
 
         if (!username || !password) {
@@ -290,7 +313,7 @@ app.post('/admin/login', (req, res) => {
             username !== ADMIN_USERNAME ||
             password !== ADMIN_PASSWORD
         ) {
-            return res.status(401).json({
+            return res.status(401().json({
                 success: false,
                 message: 'Invalid username or password.'
             });
@@ -299,7 +322,7 @@ app.post('/admin/login', (req, res) => {
         const token =
             'adm_' +
             Date.now().toString(36) +
-            '_' +
+            '_separate_' +
             Math.random().toString(36).slice(2, 12);
 
         adminSessions.add(token);
@@ -311,19 +334,23 @@ app.post('/admin/login', (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Admin login error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error.'
         });
-
     }
 });
 
 // Admin Get Notes
 app.get('/admin/notes', adminAuth, async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const notes = await notesCollection
             .find({})
@@ -337,22 +364,25 @@ app.get('/admin/notes', adminAuth, async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Admin fetch notes error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch notes.'
         });
-
     }
 });
 
 // Admin Edit Note
 app.put('/edit/:id', adminAuth, async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
-        const { id } = req.params;
-
+        const { id } = const id = req.params.id;
         const {
             courseCode,
             courseName,
@@ -384,19 +414,23 @@ app.put('/edit/:id', adminAuth, async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Edit error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to update note.'
         });
-
     }
 });
 
 // Admin Delete Note
 app.delete('/delete/:id', adminAuth, async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const { id } = req.params;
 
@@ -408,27 +442,31 @@ app.delete('/delete/:id', adminAuth, async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Admin delete error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to delete announcement.'
         });
-
     }
 });
 
 /* ============================================
    ANNOUNCEMENTS
-============================================ */
+   ============================================ */
 
 // Get Announcements
-app.get('/admin/announcements', async (req, res) => {
-
+app.get('/admin/announcements', adminAuth, async (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const announcements = await announcementsCollection
             .find({})
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: —1 })
             .toArray();
 
         res.status(200).json({
@@ -438,21 +476,25 @@ app.get('/admin/announcements', async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Fetch announcements error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch announcements.'
         });
-
     }
 });
 
 // Create Announcement
 app.post('/admin/announcements', adminAuth, async (req, res) => {
-
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
-        const { title, message } = req.body;
+        const { title, message, type } = req.body;
 
         if (!title || !message) {
             return res.status(400).json({
@@ -465,6 +507,7 @@ app.post('/admin/announcements', adminAuth, async (req, res) => {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
             title: title.trim(),
             message: message.trim(),
+            type: (type || 'info').trim(),
             createdAt: new Date().toISOString()
         };
 
@@ -477,19 +520,23 @@ app.post('/admin/announcements', adminAuth, async (req, res) => {
         });
 
     } catch (error) {
-
+        console.error('Create announcement error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to publish announcement.'
         });
-
     }
 });
 
 // Delete Announcement
-app.delete('/admin/announcements/:id', adminAuth, async (req, res) => {
-
+app.delete('/delete/:id', adminAuth, (req, res) => {
     try {
+        if (!dbReady) {
+            return res.status(503).json({
+                success: false,
+                message: 'Server starting up...'
+            });
+        }
 
         const { id } = req.params;
 
@@ -497,16 +544,15 @@ app.delete('/admin/announcements/:id', adminAuth, async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Announcement deleted.'
+            message: 'Announcement deleted successfully.'
         });
 
     } catch (error) {
-
+        console.error('Delete announcement error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error.'
+            message: 'Failed to delete announcement.'
         });
-
     }
 });
 
@@ -516,7 +562,6 @@ app.use((req, res) => {
         success: false,
         message: `Route ${req.method} ${req.path} not found`
     });
-});
 
 // Start Server
 app.listen(PORT, () => {
